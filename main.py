@@ -2,7 +2,7 @@ import openai
 import os
 import pandas as pd
 from openai import OpenAI
-from file_reader import train
+from Thesis_.file_reader import train
 from dotenv import load_dotenv
 import os
 
