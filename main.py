@@ -108,5 +108,5 @@ predicted = [str(j) for j in result_df['Predicted_Label']]
 f1 = f1_score(true, predicted, average='weighted')  
 print(f"F1 Score: {f1}")
 
-result_df.to_excel("output_with_f1_0.618.xlsx", index=False)
+result_df.to_excel("filename.xlsx", index=False)
 """
