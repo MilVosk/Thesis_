@@ -1,6 +1,6 @@
 # Relation Extraction from Texts in Biodiversity Domain
 
-This project focuses on extracting semantic relationships from textual data within the biodiversity domain. It aims to identify and categorize relationships between entities such as species, habitats, and ecological interactions using natural language processing (NLP) techniques.
+This project focuses on extracting semantic relations from textual data within the biodiversity domain. It aims to identify and categorize relations between entities such as species, habitats, and ecological interactions using natural language processing (NLP) techniques.
 
 ## Table of Contents
 
