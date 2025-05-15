@@ -41,5 +41,6 @@ def main():
     print("✅ Predictions saved to predicted_relations.csv")
 
 
+
 if __name__ == "__main__":
     main()
