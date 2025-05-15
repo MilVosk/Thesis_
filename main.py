@@ -21,7 +21,8 @@ def main():
 
     # Step 3: Generate a prompt based on examples
     prompt = prompt_generator(examples_df)
-
+    with open("prompts.txt", "w") as f:
+        f.write(prompt)
     # Step 4: Load the test data
     test_df = get_dataframe('data/test.csv', drop_first_row=True)
     #print(test_df)
