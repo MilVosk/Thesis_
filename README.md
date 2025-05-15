@@ -42,6 +42,6 @@ To set up the project environment, follow these steps:
     ```bash
     pip install -r requirements.txt
 
-3. **URun the relation extrection**
+3. **Run the relation extrection**
     ```bash
     python main.py
