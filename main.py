@@ -1,9 +1,8 @@
-#from utils.data_loader import get_dataframe
+from utils.data_loader import get_dataframe
 from utils.generate_prompt_examples import *
 from utils.prompt_generator import prompt_generator
 from utils.gpt_utils import generate_gpt_response_with_relations, parse_multiple_responses
 import pandas as pd
-
 
 def get_dataframe(file, drop_first_row=False):
     df = pd.read_csv(file, names=["label", "text"])
@@ -24,24 +23,22 @@ def main():
     
     with open("prompts.txt", "w") as f:
         f.write(prompt)
+
     # Step 4: Load the test data
     test_df = get_dataframe('data/test.csv', drop_first_row=True)
-    #print(test_df)
+
     # Step 5: Generate GPT responses for the test set
     result = generate_gpt_response_with_relations(prompt, test_df)
-    
-    #print(result)
 
     # Step 6: Parse the GPT responses into a structured format
-
-    #print(parsed_results)parsed_results
     prediction_df = parse_multiple_responses(result)
+
+    # Step 6.5: Add the original text column from test_df to prediction_df
+    prediction_df['text'] = test_df['text']
 
     # Step 7: Save the parsed predictions
     prediction_df.to_csv('predicted_relations.csv', index=False)
     print("✅ Predictions saved to predicted_relations.csv")
-
-
 
 if __name__ == "__main__":
     main()
