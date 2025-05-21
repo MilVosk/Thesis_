@@ -7,10 +7,145 @@ Head entity type: ORGANISM
 Tail entity type: ENVIRONMENT
 Relation type: OCCUR_IN
 
+Text: "Common and @ORGANISM$ and Hemiptera were identified in the @ENVIRONMENT$ ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: OCCUR_IN
+
+Text: "Here , we defined spatial priorities for the conservation of @ORGANISM$ inhabiting the Atlantic @ENVIRONMENT$ Biodiversity Hotspot that overcome the likely impacts of climate change on the distribution of this imperiled fauna ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: OCCUR_IN
+
+Text: "Results We generated a checklist of 488 @ORGANISM$ in 72 families found in Bootless @ENVIRONMENT$ during a two-week sampling effort ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: OCCUR_IN
+
+Text: "The addition of compost combined with a liquid culture of @ORGANISM$ ( PTB ) is experimentally proved to effectively decrease the TCE content in @ENVIRONMENT$ and water ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: OCCUR_IN
+
+Text: "-- c ) Estimate turnover of CWD carbon depending on @ORGANISM$ , positioning and mortality i ) Indirect carbon balance approach : Calculate deadwood input ( I ) to the @ENVIRONMENT$ by combining chronosequence data on woody increment and biomass ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: OCCUR_IN
+
+Text: "Ant diversity decreased to 0.7ÃÂ±0.8 species in plots undergoing construction and 1.5ÃÂ±1.1 @ORGANISM$ in @ENVIRONMENT$ 1 year after construction was completed ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: OCCUR_IN
+
+Text: "@ORGANISM$ with extrafloral nectaries ( EFN ) are common in tropical and @ENVIRONMENT$ and the presence of EFN trees within a tree community may influence tree growth ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: OCCUR_IN
+
+Text: "BEF-China Main Experiment 117.8998 118.1483 29.2852 29.10178 ######## ######## All EFN-visiting arthropods All EFN-visiting arthropods mstaab aklein jpeters Main Experiment : Visitors of extrafloral nectaries ( 2012 ) @ORGANISM$ with extrafloral nectaries ( EFN ) are common in tropical and @ENVIRONMENT$ and the presence of EFN trees within a tree community may influence tree growth ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: OCCUR_IN
+
+Text: "The order on the average @ORGANISM$ numbers per @ENVIRONMENT$ of litter thrips was tropic > subtropics > temperate ( n=25 , p < 0.05 ) ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: OCCUR_IN
+
 Text: "Plant Diversity Impacts Decomposition and Herbivory via Changes in Aboveground Arthropods Loss of @ORGANISM$ diversity influences essential @PHENOMENA$ as aboveground productivity , and can have cascading effects on the arthropod communities in adjacent trophic levels ."
 Head entity type: ORGANISM
 Tail entity type: PHENOMENA
 Relation type: INFLUENCE
+
+Text: "Almost half of the @ORGANISM$ assessed were considered vulnerable to the impacts of @PHENOMENA$ : amphibians being the most vulnerable group , followed by plants , reptiles , mammals and birds ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: INFLUENCE
+
+Text: "Invasive @ORGANISM$ @PHENOMENA$ biodiversity : A meta-analysis ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: INFLUENCE
+
+Text: "@ORGANISM$ @PHENOMENA$ and self-incompatibility in edible and/or medicinal crops in southwestern China , a global hotspot of biodiversity ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: INFLUENCE
+
+Text: "Our meta-analysis shows a significant decline of the diversity and density of soil invertebrates in response to @ORGANISM$ @PHENOMENA$ with anecic and endogeic earthworms causing the strongest effects ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: INFLUENCE
+
+Text: "@ORGANISM$ with more restricted distributions were more likely to show high @PHENOMENA$ vulnerability than widespread species ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: INFLUENCE
+
+Text: "To estimate habitat favorability to @ORGANISM$ , we examined the relationship of fungal abundance and species richness to various @PHENOMENA$ and environmental parameters in the Intermountain West ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: INFLUENCE
+
+Text: "The aim of this study was to test whether @ORGANISM$ contributions to community biomass can be used as surrogate measures of their contribution to @PHENOMENA$ ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: INFLUENCE
+
+Text: "We identified a trophic cascade in which top-predators Ã¢â¬â larvae of the @ORGANISM$ Ã¢â¬â indirectly increased @PHENOMENA$ by preying on bactivorous protozoa ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: INFLUENCE
+
+Text: "Percent leaf area consumed by slugs was 40 % lower in communities containing 12 plant species ; in communities containing only three species earthworms increased @ORGANISM$ @PHENOMENA$ ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: INFLUENCE
+
+Text: "In @QUALITY$ @ENVIRONMENT$ , earthworms serve as important ecosystem engineers making up the majority of soil faunal biomass ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: HAVE/OF
+
+Text: "Zambia presents an acute example of this challenge , with an expected tripling of population by 2050 , good potential to expand maize and soya bean production , and large @QUALITY$ of relatively undisturbed miombo @ENVIRONMENT$ and associated habitat types of high biodiversity value ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: HAVE/OF
+
+Text: "For instance , invasion by earthworms , a below-ground invertebrate ecosystem engineer , in previously earthworm-free ecosystems alters the @QUALITY$ of the @ENVIRONMENT$ ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: HAVE/OF
+
+Text: "Slugs damaged 60 % less leaves when earthworms were present , regardless of the @QUALITY$ of the @ENVIRONMENT$ ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: HAVE/OF
+
+Text: "This review discusses the recent advances in understanding ( i ) what causes variations in the @QUALITY$ or relative abundance of intestinal @ENVIRONMENT$ , ( ii ) what are the clinical consequences of these variations , and ( iii ) what are the perspectives for maintaining these markers at low levels ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: HAVE/OF
+
+Text: "erfmeier sboth CSPs : @QUALITY$ and abundance in the central plot of the CSPs We performed an extensive @ENVIRONMENT$ survey of the central plots of each CSP in GNNR in 2008 ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: HAVE/OF
+
+Text: "Plant nitrogen concentrations across three focus species were 18 % higher when earthworms were present ; @QUALITY$ of @ENVIRONMENT$ did not affect plant quality ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: HAVE/OF
+
+Text: "Our meta-analysis shows a significant decline of the diversity and @QUALITY$ of @ENVIRONMENT$ invertebrates in response to earthworm invasion with anecic and endogeic earthworms causing the strongest effects ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: HAVE/OF
+
+Text: "reproductive allocation ) are most directly linked to @QUALITY$ within a @ENVIRONMENT$ , empirical investigations have rarely been done ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: HAVE/OF
 
 Text: "In @QUALITY$ @ENVIRONMENT$ , earthworms serve as important ecosystem engineers making up the majority of soil faunal biomass ."
 Head entity type: QUALITY
@@ -22,12 +157,147 @@ Head entity type: ORGANISM
 Tail entity type: ENVIRONMENT
 Relation type: no relation
 
+Text: "We draw on a spatially-replicated dataset on Atlantic forest small @ORGANISM$ , consisting of 16 sampling sites divided between forests and matrix @ENVIRONMENT$ in each of five 3600-ha landscapes ( varying from 5 % to 45 % forest cover ) , and on an a priori classification of species into habitat requirement categories ( forest specialists , habitat generalists and open-area specialists ) ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "-- - 6 digit metal tags starting with 3 were also used for woody debris items -- the reference file linking metal tags to tree individual tags is called `` Tree stem reference list for the Comparative Study Sites ( CSPs ) ) Silver ID given by Martin , in this case the @ORGANISM$ was considered alive by Martin , and dead by AnjaCSP metal tag number ( trees , @ENVIRONMENT$ debris ) ; Datagroup description : CSP metal tag number ( trees , woody debris ) ; Datagroup description : CSP tree individuals were marked mostly with metal tags but also additional tags were used ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "This dataset contains information about requests for @ORGANISM$ assistance , relocation , and/or rescue completed by the Urban @ENVIRONMENT$ Rangers Source : Last updated at : 2/8/2020 Attribution is encouraged by New York City ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "-- - 6 digit metal tags starting with 3 were also used for woody debris items -- the reference file linking metal tags to tree individual tags is called `` Tree stem reference list for the Comparative Study Sites ( CSPs ) ) Silver ID given by Anja or Christian , can be given to a woody debris item or to a standing @ORGANISM$ or snagCSP metal tag number ( trees , @ENVIRONMENT$ debris ) , original entry ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "We hypothesized that ( i ) the food choice of slugs would be altered by earthworms earthworms specific effects on the growth and nutrient content of @ORGANISM$ , ( ii ) slug herbivory will be less affected by earthworms in @ENVIRONMENT$ containing more plant species than in those with fewer plant species because of a more readily utilization of plant resources making the impacts of earthworms less pronounced ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "From 27 comparative study plots ( CSPs ) soil samples were taken in 6 depth increments per CSP 117.8998 118.1483 29.2852 29.10178 2/2/2008 ######## no organisms no @ORGANISM$ tscholten pkuehn cgeissler CSPs : @ENVIRONMENT$ CNS and pH analyses of depth increments in the Comparative Study Plots Soil chemical laboratory analyses of all 27 comparative study plots ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "Other urban_park_ranger_animal_condition_response_1 date_and_time_of_initial_call Date and Time of initial call datetime # dateTime date_and_time_of_initial_call date_and_time_of_ranger_response Date and time of Ranger response datetime # dateTime date_and_time_of_ranger_response borough Borough string # string borough property Property string # string property location Location string # string location species_description Species Description string # string species_description call_source Call Source string # string call_source species_status Species Status string # string species_status animal_condition Animal Condition string # string animal_condition duration_of_response Duration of Response number # decimal duration_of_response age Age string # string age animal_class Animal Class string # string animal_class 311sr_number 311SR Number string # string 311sr_number final_ranger_action Final Ranger Action string # string final_ranger_action of_animals # of Animals integer # integer of_animals pep_response PEP Response boolean # boolean pep_response animal_monitored Animal Monitored boolean # boolean animal_monitored rehabilitator Rehabilitator string # string rehabilitator hours_spent_monitoring Hours spent monitoring number # decimal hours_spent_monitoring police_response Police Response boolean # boolean police_response esu_response ESU Response boolean # boolean esu_response acc_intake_number ACC Intake Number string # string acc_intake_number data/urban_park_ranger_animal_condition_response_1.csv csv original/urban-park-ranger-animal-condition-response-1.csv original/urban-park-ranger-animal-condition-response-1.csv csv text/csv 97827 animal rescue wildlife raccoon deer @ORGANISM$ hawk chicken rooster dog cat squirrel urban park ranger @ENVIRONMENT$"
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "Other urban_park_ranger_animal_condition_response_1 date_and_time_of_initial_call Date and Time of initial call datetime # dateTime date_and_time_of_initial_call date_and_time_of_ranger_response Date and time of Ranger response datetime # dateTime date_and_time_of_ranger_response borough Borough string # string borough property Property string # string property location Location string # string location species_description Species Description string # string species_description call_source Call Source string # string call_source species_status Species Status string # string species_status animal_condition Animal Condition string # string animal_condition duration_of_response Duration of Response number # decimal duration_of_response age Age string # string age animal_class Animal Class string # string animal_class 311sr_number 311SR Number string # string 311sr_number final_ranger_action Final Ranger Action string # string final_ranger_action of_animals # of Animals integer # integer of_animals pep_response PEP Response boolean # boolean pep_response animal_monitored Animal Monitored boolean # boolean animal_monitored rehabilitator Rehabilitator string # string rehabilitator hours_spent_monitoring Hours spent monitoring number # decimal hours_spent_monitoring police_response Police Response boolean # boolean police_response esu_response ESU Response boolean # boolean esu_response acc_intake_number ACC Intake Number string # string acc_intake_number data/urban_park_ranger_animal_condition_response_1.csv csv original/urban-park-ranger-animal-condition-response-1.csv original/urban-park-ranger-animal-condition-response-1.csv csv text/csv 97827 animal rescue wildlife raccoon deer bird @ORGANISM$ chicken rooster dog cat squirrel urban park ranger @ENVIRONMENT$"
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "Using a combination of sugar composition analyses , metagenomics , and whole-genome sequencing , we reveal that the @ORGANISM$ @ENVIRONMENT$ microbiome of leaf-cutter ants is composed of a diverse community of bacteria with high plant biomass-degrading capacity ."
+Head entity type: ORGANISM
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
 Text: "@ORGANISM$ Diversity Impacts Decomposition and Herbivory via Changes in Aboveground Arthropods Loss of plant diversity influences essential @PHENOMENA$ as aboveground productivity , and can have cascading effects on the arthropod communities in adjacent trophic levels ."
 Head entity type: ORGANISM
 Tail entity type: PHENOMENA
 Relation type: no relation
 
+Text: "For each @ORGANISM$ we established conservation goals based on @PHENOMENA$ priorities , and estimated new potential protected areas using Marxan conservation planning software ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: no relation
+
+Text: "Species were removed in a subtractive fashion so that biomass was allowed to vary with each @ORGANISM$ removal , and key @PHENOMENA$ were measured at each stage of community disassembly ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: no relation
+
+Text: "Each disassembly of a food web resulted in a unique relationship between parasite richness and the richness of free-living @ORGANISM$ , because the @PHENOMENA$ trajectory of parasites was sensitive to the order of extinctions of free-living species ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: no relation
+
+Text: "For modeling @ORGANISM$ species niches , we combined six modeling methods and three different @PHENOMENA$ ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: no relation
+
+Text: "Similarly , modern ecosystems , in which invasive @ORGANISM$ are rampant , may be expected to exhibit similar shutdown of @PHENOMENA$ by vicariance as an outcome of the modern biodiversity crisis ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: no relation
+
+Text: "Mapping the Drivers of Climate Change Vulnerability for Australia s @ORGANISM$ Effective conservation management for @PHENOMENA$ adaptation rests on understanding the factors driving species species vulnerability in a spatially explicit manner so as to direct on-ground action ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: no relation
+
+Text: "Herbivory of an invasive slug is affected by @ORGANISM$ and the composition of plant communities Background Biodiversity loss and @PHENOMENA$ are among the most important human-induced global changes ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: no relation
+
+Text: "Indicators : Access to clean fuels and technologies for cooking , Access to electricity , Adjusted net savings , Adjusted savings , Agricultural land , Agricultural methane emissions , Agricultural nitrous oxide emissions , Annual freshwater withdrawals , Aquaculture production , Arable land , Average precipitation in depth , Bird @ORGANISM$ , CO2 emissions , CO2 emissions from electricity and @PHENOMENA$ , CO2 emissions from gaseous fuel consumption , CO2 emissions from liquid fuel consumption , CO2 emissions from manufacturing industries and construction , CO2 emissions from other sectors , CO2 emissions from residential buildings and commercial and public services , CO2 emissions from solid fuel consumption , CO2 emissions from transport , CO2 intensity , Capture fisheries production , Coal rents , Disaster risk reduction progress score , Droughts , Electricity production from oil , Electricity production from renewable sources , Energy intensity level of primary energy , Energy related methane emissions , Fish species , Forest area , Forest rents , GHG net emissions/removals by LUCF , HFC gas emissions , Land area , Land area where elevation is below 5 meters , Mammal species , Marine protected areas , Methane emissions , Methane emissions in energy sector , Mineral rents , Mortality rate attributed to household and ambient air pollution , Mortality rate attributed to unintentional poisoning , Mortality rate attributed to unsafe water , Natural gas rents , Nitrous oxide emissions , Nitrous oxide emissions in energy sector , Oil rents , Other greenhouse gas emissions , PFC gas emissions , PM2.5 air pollution , People practicing open defecation , People using at least basic drinking water services , People using at least basic sanitation services , People using safely managed drinking water services , People using safely managed sanitation services , People with basic handwashing facilities including soap and water , Plant species , Population living in areas where elevation is below 5 meters , Population living in slums , Renewable electricity output , Renewable energy consumption , Renewable internal freshwater resources , Renewable internal freshwater resources per capita , Rural land area , Rural land area where elevation is below 5 meters , Rural population living in areas where elevation is below 5 meters , SF6 gas emissions , Surface area , Terrestrial and marine protected areas , Terrestrial protected areas , Total fisheries production , Total greenhouse gas emissions , Total natural resources rents , Urban land area , Urban land area where elevation is below 5 meters , Urban population living in areas where elevation is below 5 meters , Water productivity Methodology - Registry Source : Last updated at : ######## License - Creative Commons Attribution International CC-BY environment_indicators_for_india_1 country_name Country Name string # string country_name country_iso3 Country ISO3 string # string country_iso3 year Year gyear # gYear year indicator_name Indicator Name string # string indicator_name indicator_code Indicator Code string # string indicator_code value Value number # decimal value data/environment_indicators_for_india_1.csv csv original/environment-indicators-for-india-1.csv original/environment-indicators-for-india-1.csv csv text/csv 375066 environment hxl indicators india"
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: no relation
+
+Text: "The greatest energy sector withdrawal/manipulation are for hydropower and thermoelectric cooling , although potential new EPA rules that would require recirculating cooling for @ORGANISM$ would reduce withdrawal/manipulation by 441,000 Mm3 ( 20,300 Mm3 @PHENOMENA$ ) ."
+Head entity type: ORGANISM
+Tail entity type: PHENOMENA
+Relation type: no relation
+
 Text: "In the light of the @QUALITY$ , it is of major importance not only to conserve , but also to restore @ENVIRONMENT$ ecosystems ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "For four ecosystem functions ( wood biomass , @QUALITY$ , @ENVIRONMENT$ cations , steady infiltration rates ) linked to the focal ecosystem services , we quantified ecosystem service multi-functionality as ( 1 ) the proportion of functions above half-maximum , and ( 2 ) mean percentage excess above mean function values , and assessed whether plant diversity or environmental favorability better predicted multi-functionality ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "Relationship between Reproductive Allocation and Relative @QUALITY$ among 32 Species of a @ENVIRONMENT$ : Effects of Fertilization and Grazing Background Understanding the relationship between species traits and species abundance is an important goal in ecology and biodiversity science ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "While research often focuses on how variation in species richness influences ecosystem processes , assessing @QUALITY$ in a food web context can provide further insight into the relationship between diversity and @ENVIRONMENT$ functioning and elucidate potential mechanisms underpinning this relationship ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "Known on data portal , see ( `` CSP soil profile description II_soil horizons horizons ) authored by SP6 ( horizon : the soil horizon name assigned by SP6 to that horizon in the @QUALITY$ and the samples along soil profile ; Helper ; known on data portal , see `` CSP soil profile description II_soil horizons.xls horizons.xls authored by SP6 ) @ENVIRONMENT$ according to established cateogories ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "Mind that the azimuth may have to be corrected given the @QUALITY$ and location , since it depends on the magnetic field of the @ENVIRONMENT$ . )"
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "To allow different interests to find potential compromises , users can apply varying @QUALITY$ to examine the effects of their subjective preferences on the spatial allocation of new @ENVIRONMENT$ and its costs ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "Indicators : Access to clean fuels and technologies for cooking , Access to electricity , Adjusted net savings , Adjusted savings , Agricultural land , Agricultural methane emissions , Agricultural nitrous oxide emissions , Annual freshwater withdrawals , Aquaculture production , Arable land , Average precipitation in depth , Bird species , CO2 emissions , CO2 emissions from electricity and heat production , CO2 emissions from gaseous fuel consumption , CO2 emissions from liquid fuel consumption , CO2 emissions from manufacturing industries and construction , CO2 emissions from other sectors , CO2 emissions from residential buildings and commercial and public services , CO2 emissions from solid fuel consumption , CO2 emissions from transport , CO2 intensity , Capture fisheries production , Coal rents , Disaster risk reduction progress score , Droughts , Electricity production from oil , Electricity production from renewable sources , Energy intensity level of primary @QUALITY$ , Energy related methane emissions , Fish species , @ENVIRONMENT$ area , Forest rents , GHG net emissions/removals by LUCF , HFC gas emissions , Land area , Land area where elevation is below 5 meters , Mammal species , Marine protected areas , Methane emissions , Methane emissions in energy sector , Mineral rents , Mortality rate attributed to household and ambient air pollution , Mortality rate attributed to unintentional poisoning , Mortality rate attributed to unsafe water , Natural gas rents , Nitrous oxide emissions , Nitrous oxide emissions in energy sector , Oil rents , Other greenhouse gas emissions , PFC gas emissions , PM2.5 air pollution , People practicing open defecation , People using at least basic drinking water services , People using at least basic sanitation services , People using safely managed drinking water services , People using safely managed sanitation services , People with basic handwashing facilities including soap and water , Plant species , Population living in areas where elevation is below 5 meters , Population living in slums , Renewable electricity output , Renewable energy consumption , Renewable internal freshwater resources , Renewable internal freshwater resources per capita , Rural land area , Rural land area where elevation is below 5 meters , Rural population living in areas where elevation is below 5 meters , SF6 gas emissions , Surface area , Terrestrial and marine protected areas , Terrestrial protected areas , Total fisheries production , Total greenhouse gas emissions , Total natural resources rents , Urban land area , Urban land area where elevation is below 5 meters , Urban population living in areas where elevation is below 5 meters , Water productivity Methodology - Registry Source : Last updated at : ######## License - Creative Commons Attribution International CC-BY environment_indicators_for_india_1 country_name Country Name string # string country_name country_iso3 Country ISO3 string # string country_iso3 year Year gyear # gYear year indicator_name Indicator Name string # string indicator_name indicator_code Indicator Code string # string indicator_code value Value number # decimal value data/environment_indicators_for_india_1.csv csv original/environment-indicators-for-india-1.csv original/environment-indicators-for-india-1.csv csv text/csv 375066 environment hxl indicators india"
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "@QUALITY$ and functional group richness affected @ENVIRONMENT$ stoichiometry , especially by increasing C : P and N : P ratios ."
+Head entity type: QUALITY
+Tail entity type: ENVIRONMENT
+Relation type: no relation
+
+Text: "By showing a first link between plant diversity and stoichiometry in a multiyear experiment , our results indicate that losing plant species from grassland ecosystems will lead to less reliable @QUALITY$ of forage for herbivorous consumers and @ENVIRONMENT$ litter input ."
 Head entity type: QUALITY
 Tail entity type: ENVIRONMENT
 Relation type: no relation

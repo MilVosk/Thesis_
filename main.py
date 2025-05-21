@@ -21,7 +21,7 @@ def main():
     # Step 3: Generate a prompt based on examples
     prompt = prompt_generator(examples_df)
     
-    with open("prompts.txt", "w") as f:
+    with open("prompts.txt", "w", encoding="utf-8") as f:
         f.write(prompt)
 
     # Step 4: Load the test data
@@ -35,9 +35,10 @@ def main():
 
     # Step 6.5: Add the original text column from test_df to prediction_df
     prediction_df['text'] = test_df['text']
+    prediction_df['gold label'] = test_df['label']
 
     # Step 7: Save the parsed predictions
-    prediction_df.to_csv('predicted_relations.csv', index=False)
+    prediction_df.to_csv('predicted_relations.csv', index=False, encoding="utf-8")
     print("✅ Predictions saved to predicted_relations.csv")
 
 if __name__ == "__main__":

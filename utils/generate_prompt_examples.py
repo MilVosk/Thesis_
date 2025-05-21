@@ -12,9 +12,9 @@ def get_dataframe(file_name):
     """
     Loads the CSV file, assigns column names, removes the first row (assumed header), and returns the DataFrame.
     """
-    df = pd.read_csv(file_name, names=["Label", "Text"])
+    df = pd.read_csv(file_name, names=["label", "text"])
     df = df.drop(index=df.index[0])  # Drop potential header row
-    df = df.dropna(subset=["Label", "Text"])  # Ensure no missing values
+    df = df.dropna(subset=["label", "text"])  # Ensure no missing values
     return df
 
 def extract_entities(text):
@@ -26,11 +26,14 @@ def extract_entities(text):
 
 def get_examples_as_dataframe(df):
     """
-    Extracts one positive and one negative example for each defined relation type.
+    Extracts 5 positive and 5 negative examples for each defined relation type.
     Returns a DataFrame with: ['text', 'relation', 'head_type', 'tail_type', 'label']
     """
-    positive = {rel: None for rel in RELATIONS}
-    negative = {rel: None for rel in RELATIONS}
+    POS_LIMIT = 10
+    NEG_LIMIT = 10
+
+    positive = {rel: [] for rel in RELATIONS}
+    negative = {rel: [] for rel in RELATIONS}
 
     for _, row in df.iterrows():
         raw_text = str(row['text']).strip()
@@ -55,26 +58,15 @@ def get_examples_as_dataframe(df):
                     "label": "positive" if label == 1 else "negative"
                 }
 
-                if label == 1 and not positive[rel]:
-                    positive[rel] = example
-                elif label == 0 and not negative[rel]:
-                    negative[rel] = example
+                if label == 1 and len(positive[rel]) < POS_LIMIT:
+                    positive[rel].append(example)
+                elif label == 0 and len(negative[rel]) < NEG_LIMIT:
+                    negative[rel].append(example)
 
-        # Break early if all examples found
-        if all(positive.values()) and all(negative.values()):
+        # Stop early if all examples are collected
+        if all(len(positive[rel]) >= POS_LIMIT and len(negative[rel]) >= NEG_LIMIT for rel in RELATIONS):
             break
 
-    # Combine and drop Nones if any relation was missing
-    all_examples = [ex for ex in (*positive.values(), *negative.values()) if ex]
+    # Combine and flatten all examples
+    all_examples = [ex for examples in (positive.values(), negative.values()) for ex_list in examples for ex in ex_list]
     return pd.DataFrame(all_examples)
-
-"""def main():
-    df = get_dataframe('C:\\Users\\marce\\Desktop\\thesis\\relation_extraction\\data\\train.csv')
-    examples_df = get_examples_as_dataframe(df)
-
-    # Save the output
-    examples_df.to_csv("relation_examples2x.csv", index=False)
-    print("Saved example prompts to relation_examples2x.csv")"""
-
-if __name__ == "__main__":
-    main()
