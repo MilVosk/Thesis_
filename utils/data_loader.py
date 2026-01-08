@@ -1,23 +1,31 @@
+from typing import Optional, Tuple
+
 import pandas as pd
 
-def get_dataframe(file, drop_first_row=False):
-    
-    # ='data/train.csv'
-    """
-    Loads the CSV file, optionally drops the first row, and assigns column names.
-    
-    Args:
-    - file (str): Path to the CSV file.
-    - drop_first_row (bool): If True, the first row will be dropped (useful if the file contains an unwanted header).
-    
-    Returns:
-    - DataFrame: A pandas DataFrame with the desired structure.
-    """
-    df = pd.read_csv(file, names=["label", "text"])
-    
-    if drop_first_row:
-        # Drop the first row and reset the index
-        df = df.drop(index=df.index[0])
-        df.reset_index(drop=True, inplace=True)
-        
+
+def get_dataframe(
+    file_path: str,
+    columns: Optional[Tuple[str, ...]] = ("gold", "text"),
+    has_header: bool = True,
+    *,
+    keep_default_na: bool = False,
+) -> pd.DataFrame:
+    header = 0 if has_header else None
+    # keep_default_na=False ensures literal strings like "NA" remain strings.
+    df = pd.read_csv(file_path, header=header, keep_default_na=keep_default_na)
+
+    if columns is not None:
+        if not has_header:
+            if len(df.columns) < len(columns):
+                raise ValueError(
+                    f"{file_path} has {len(df.columns)} columns, expected at least {len(columns)}."
+                )
+            new_columns = list(columns) + df.columns[len(columns):].tolist()
+            df.columns = new_columns
+        else:
+            missing = [col for col in columns if col not in df.columns]
+            if missing:
+                raise ValueError(f"Missing expected columns {missing} in {file_path}.")
+        df = df.loc[:, columns]
+
     return df

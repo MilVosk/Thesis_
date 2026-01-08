@@ -1,4 +1,9 @@
 .env
 __pycache__/
 *.pyc
-.ipynb_checkpoints/
+.ipynb_checkpoints/venv/
+.venv/
+__pycache__/
+results.csv
+few_shot_log.csv`nprompts.txt
+evaluation_log.csv
