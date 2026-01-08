@@ -95,6 +95,10 @@ Key artifacts:
 - **Binary metrics**: Treats any non-empty `gold` as a positive relation and compares against `model_prediction_binary`.
 - **Multi-class metrics**: Restricts to rows with annotated relations and compares `model_prediction` vs. `gold` using micro F1 and Hamming loss.
 
+### About Hamming loss
+
+Hamming loss measures the fraction of positions where the prediction disagrees with the reference label. For the binary task it quantifies how often the model flips "relation vs. no relation"; for the multi-class task it captures the proportion of misclassified relation types among the sentences that actually contain a relation. Lower values indicate better performance.
+
 After printing scores, it appends a row to `evaluation_log.csv` that captures:
 
 - Timestamp and source file used for scoring.
