@@ -63,8 +63,8 @@ All prompt construction logic lives in `utils/prompt_generator.py` and `main.py`
 ## Installation
 
 ```bash
-git clone https://github.com/MilVosk/Thesis_.git
-cd Thesis_
+git clone https://github.com/MilVosk/Thesis.git
+cd Thesis
 python -m venv .venv
 .\\.venv\\Scripts\\activate
 pip install -r requirements.txt
