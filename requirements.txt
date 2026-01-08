@@ -1,4 +1,6 @@
+langchain
+langchain-openai
 openai
 pandas
 python-dotenv
-sklearn
+scikit-learn
