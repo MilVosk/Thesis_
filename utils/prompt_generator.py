@@ -1,21 +1,31 @@
 def prompt_generator(examples_df):
     prompt = [
         (
-            "You are an information extraction model specialized in the biodiversity domain.\n"
-            "Your task is to detect and extract semantic relations between annotated entities in a given text.\n"
-            "Entities are annotated using the format @ENTITY_TYPE$, where ENTITY_TYPE is one of {ORGANISM, ENVIRONMENT, PHENOMENA, QUALITY, LOCATION, MATTER}.\n"
-            "Always analyze the sentence itself before relying on examples. Co-occurrence of entities is not sufficient; if the sentence is metadata, a study summary, or lacks an explicit link, output '0, NA'.\n"
-            "Use a two-step reasoning process:\n"
-            "  1) Decide which intuitive relation best fits the sentence:\n"
-            "       - INFLUENCE: one entity affects or changes the other (e.g., an ORGANISM influences a PHENOMENA).\n"
-            "       - OCCUR: one entity occurs in or is present within another (e.g., a PROCESS occurs in an ENVIRONMENT).\n"
-            "       - HAVE/OF: one entity is a property, component, or possession of the other (e.g., QUALITY of ORGANISM).\n"
-            "     If none apply (metadata, hypotheses, or no explicit interaction), treat it as NA.\n"
-            "  2) Map the chosen type to the final label deterministically: INFLUENCE → INFLUENCE, OCCUR → OCCUR_IN, HAVE/OF → HAVE, None → NA.\n"
-            "Valid relation labels are HAVE, OCCUR_IN, and INFLUENCE.\n"
-            "Never leave the answer blank. If a relation is present, respond exactly as '1, RELATION_NAME' using one of the valid labels in uppercase. If no relation is present, respond exactly as '0, NA'.\n"
-            "Study the few-shot examples and mimic the reasoning.\n"
-        
+            "You are an information extraction model specialized in biodiversity texts.\n"
+            "Task: Given ONE sentence containing annotated entities, decide whether the sentence explicitly states a semantic relation between the entity mentions.\n"
+            "Entities appear as @ENTITY_TYPE$ where ENTITY_TYPE ∈ {ORGANISM, ENVIRONMENT, PHENOMENA, QUALITY, LOCATION, MATTER}.\n"
+            "OUTPUT FORMAT (strict):\n"
+            
+            "- If a relation is present: 1, HAVE | 1, OCCUR_IN | 1, INFLUENCE\n"
+            "- If no relation is present: 0, NA\n"
+            "Return ONLY the final label line. No extra text.\n"
+            "If you output '1', you must explicitly name the relation label (HAVE, OCCUR_IN, or INFLUENCE); never leave it blank.\n"
+            
+            "IMPORTANT DECISION RULES:\n"
+            "1) First decide if the sentence contains an explicit relation statement between the named entities.\n"
+            "- Co-occurrence is NOT enough.\n"
+            "- Carefully read the sentence to detect, wether there is relation between the entities or not.\n"
+            "2) If (and only if) an explicit link exists, choose exactly ONE relation label:\n"
+            "A) OCCUR_IN\n"
+            "Choose OCCUR_IN if one entity is stated to be located in / found in / present in / recorded in / distributed in a place or setting.\n"
+            "B) HAVE\n"
+            "Choose HAVE if one entity is a property, attribute, component, part, measurement, or state of another.\n"
+            "C) INFLUENCE\n"
+            "Choose INFLUENCE only if the sentence states that changing one entity has an impact on the other.\n"
+            "4)Mere correlation, association, or background description is NOT sufficient.\n"
+            "5) Direction is irrelevant.\n"
+            "Return exactly one line in the required schema.\n"
+
         )
     ]
 

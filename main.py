@@ -8,14 +8,39 @@ import pandas as pd
 from utils.data_loader import get_dataframe
 from utils.extract_shots import extract_shots
 from utils.gpt_utils import generate_gpt_response_with_relations, parse_multiple_responses
-from utils.langchain_shot_selector import build_balanced_entity_pair_selector
+from utils.langchain_shot_selector import (
+    build_balanced_entity_pair_selector,
+    build_semantic_similarity_selector,
+)
 from utils.prompt_generator import prompt_generator
 
 
-EVAL_CSV_PATH = "data/check.csv"
+EVAL_CSV_PATH = "data/test.csv"
 EVAL_HAS_HEADER = True
-EVAL_ROW_LIMIT = None 
+# Set to None to evaluate on the full test set.
+EVAL_ROW_LIMIT = None
 CODE_PROMPT_PATH = Path("code_prompt.txt")
+
+# Prompt / evaluation configuration
+# Set USE_ZERO_SHOT = True to run pure zero-shot classification (no few-shot examples).
+USE_ZERO_SHOT = True
+
+# Controls how many labeled examples are written to data/shot.csv per label
+# when running in few-shot mode.
+FEWSHOT_SAMPLES_PER_LABEL = 6
+
+# Controls how many dynamic examples are selected around the current sentence
+# when using the balanced entity-pair selector (few-shot mode only).
+DYNAMIC_POSITIVE_SAMPLES = 4
+DYNAMIC_NA_SAMPLES = 8
+
+# Whether to always include the static few-shot pool in each prompt.
+INCLUDE_STATIC_BASE_EXAMPLES = False
+
+# Controls semantic-similarity retrieval for dynamic few-shot prompts.
+USE_SEMANTIC_SELECTOR = True
+SEMANTIC_SIMILARITY_SAMPLES = 8
+
 RELATION_CLASS_MAP = {
     "HAVE": "Have",
     "OCCUR_IN": "OccurIn",
@@ -26,7 +51,7 @@ RELATION_CLASS_MAP = {
 def ensure_shot_examples(
     source_csv: str = "data/train.csv",
     target_csv: str = "data/shot.csv",
-    samples_per_label: int = 2,
+    samples_per_label: int = 6,
     source_has_header: bool = False,
 ) -> None:
     """
@@ -52,21 +77,30 @@ def ensure_shot_examples(
 
 
 def build_prompt_builder(
-    base_examples_df: pd.DataFrame,
+    base_examples_df: Optional[pd.DataFrame],
     *,
     entity_pair_selector=None,
+    semantic_selector=None,
     na_selector=None,
     positive_selector=None,
     log_recorder=None,
 ):
     def _builder(text: str) -> str:
-        frames = [base_examples_df.assign(_source="base")]
+        frames: list[pd.DataFrame] = []
+        if base_examples_df is not None and not base_examples_df.empty:
+            frames.append(base_examples_df.assign(_source="base"))
 
         if entity_pair_selector is not None:
             dynamic_examples = entity_pair_selector.select_examples({"text": text})
             if dynamic_examples:
                 frames.append(
                     pd.DataFrame(dynamic_examples).assign(_source="entity_pair")
+                )
+        if semantic_selector is not None:
+            semantic_examples = semantic_selector.select_examples({"text": text})
+            if semantic_examples:
+                frames.append(
+                    pd.DataFrame(semantic_examples).assign(_source="semantic")
                 )
 
         if positive_selector is not None:
@@ -100,6 +134,7 @@ def build_code_prompt_builder(
     *,
     base_examples_df: Optional[pd.DataFrame] = None,
     entity_pair_selector=None,
+    semantic_selector=None,
     log_recorder=None,
 ) -> Callable[[str], str]:
     placeholder = "{INPUT_TEXT}"
@@ -114,6 +149,12 @@ def build_code_prompt_builder(
             if dynamic_examples:
                 frames.append(
                     pd.DataFrame(dynamic_examples).assign(_source="entity_pair")
+                )
+        if semantic_selector is not None:
+            semantic_examples = semantic_selector.select_examples({"text": text})
+            if semantic_examples:
+                frames.append(
+                    pd.DataFrame(semantic_examples).assign(_source="semantic")
                 )
 
         if not frames:
@@ -174,6 +215,25 @@ def build_code_prompt_builder(
     return _builder
 
 
+def build_zero_shot_code_prompt_builder(template: str) -> Callable[[str], str]:
+    """
+    Build a prompt builder that uses the code-style template in pure zero-shot
+    mode (no few-shot examples are appended).
+    """
+    placeholder = "{INPUT_TEXT}"
+
+    def _builder(text: str) -> str:
+        if placeholder in template:
+            return template.replace(placeholder, text)
+        escaped = json.dumps(text)
+        return (
+            f"{template.rstrip()}\n\n# =========================\n"
+            f"# Input\n# =========================\ncontext = {escaped}\n"
+        )
+
+    return _builder
+
+
 def load_code_prompt() -> Optional[str]:
     if not CODE_PROMPT_PATH.exists():
         return None
@@ -190,69 +250,112 @@ def main() -> None:
         log_df["input_text"] = input_text
         few_shot_logs.append(log_df)
 
-    ensure_shot_examples()
-    shot_df = get_dataframe("data/shot.csv")
-    contrast_examples = pd.DataFrame(
-        [
-            {
-                "gold": "INFLUENCE",
-                "text": (
-                    "Although the same @ORGANISM$ appears in the @ENVIRONMENT$, "
-                    "this sentence explains how shifts in @ORGANISM$ abundance influence "
-                    "@ENVIRONMENT$ nutrient cycling."
-                ),
-            },
-            {
-                "gold": "OCCUR_IN",
-                "text": (
-                    "Here the identical @ORGANISM$ is merely reported to occur in the "
-                    "@ENVIRONMENT$ without implying any change or impact."
-                ),
-            },
-            {
-                "gold": "NA",
-                "text": (
-                    "A field checklist mentions @ORGANISM$ alongside the @ENVIRONMENT$, "
-                    "but it does not describe a relation between them."
-                ),
-            },
-        ]
-    )
-    shot_df = pd.concat([shot_df, contrast_examples], ignore_index=True)
-
-    prompt_preview = prompt_generator(shot_df)
-    with open("prompts.txt", "w", encoding="utf-8") as f:
-        f.write(prompt_preview)
-
-    try:
-        entity_pair_selector = build_balanced_entity_pair_selector(
-            source_csv="data/train.csv",
-            label_column="gold",
-            text_column="text",
-            positive_samples=2,
-            na_samples=3,
-            has_header=False,
-        )
-    except ValueError as exc:
-        print(
-            "Warning: unable to build balanced entity-pair selector "
-            f"({exc}). Falling back to static few-shot examples."
-        )
+    # Prepare examples and prompt builder depending on zero-shot vs few-shot mode.
+    if USE_ZERO_SHOT:
+        # Pure zero-shot: no labeled examples are used.
+        shot_df = pd.DataFrame(columns=["gold", "text"])
         entity_pair_selector = None
 
-    if code_prompt_template:
-        prompt_builder = build_code_prompt_builder(
-            code_prompt_template,
-            base_examples_df=None,
-            entity_pair_selector=entity_pair_selector,
-            log_recorder=record_few_shot_examples,
-        )
+        # Still write a prompt preview (instructions only) for inspection.
+        prompt_preview = prompt_generator(shot_df)
+        with open("prompts.txt", "w", encoding="utf-8") as f:
+            f.write(prompt_preview)
+
+        if code_prompt_template:
+            prompt_builder = build_zero_shot_code_prompt_builder(code_prompt_template)
+        else:
+            # Simple zero-shot builder: always use an empty examples DataFrame.
+            def prompt_builder(text: str) -> str:  # type: ignore[assignment]
+                _ = text
+                empty_df = pd.DataFrame(columns=["gold", "text"])
+                return prompt_generator(empty_df)
     else:
-        prompt_builder = build_prompt_builder(
-            shot_df,
-            entity_pair_selector=entity_pair_selector,
-            log_recorder=record_few_shot_examples,
-        )
+        # Few-shot mode: optionally include static examples plus dynamic selectors.
+        if INCLUDE_STATIC_BASE_EXAMPLES:
+            ensure_shot_examples(samples_per_label=FEWSHOT_SAMPLES_PER_LABEL)
+            shot_df = get_dataframe("data/shot.csv")
+            contrast_examples = pd.DataFrame(
+                [
+                    {
+                        "gold": "INFLUENCE",
+                        "text": (
+                            "Although the same @ORGANISM$ appears in the @ENVIRONMENT$, "
+                            "this sentence explains how shifts in @ORGANISM$ abundance influence "
+                            "@ENVIRONMENT$ nutrient cycling."
+                        ),
+                    },
+                    {
+                        "gold": "OCCUR_IN",
+                        "text": (
+                            "Here the identical @ORGANISM$ is merely reported to occur in the "
+                            "@ENVIRONMENT$ without implying any change or impact."
+                        ),
+                    },
+                    {
+                        "gold": "NA",
+                        "text": (
+                            "A field checklist mentions @ORGANISM$ alongside the @ENVIRONMENT$, "
+                            "but it does not describe a relation between them."
+                        ),
+                    },
+                ]
+            )
+            base_examples_df = pd.concat([shot_df, contrast_examples], ignore_index=True)
+        else:
+            base_examples_df = pd.DataFrame(columns=["gold", "text"])
+
+        prompt_preview = prompt_generator(base_examples_df)
+        with open("prompts.txt", "w", encoding="utf-8") as f:
+            f.write(prompt_preview)
+
+        semantic_selector = None
+        try:
+            entity_pair_selector = build_balanced_entity_pair_selector(
+                source_csv="data/train.csv",
+                label_column="gold",
+                text_column="text",
+                positive_samples=DYNAMIC_POSITIVE_SAMPLES,
+                na_samples=DYNAMIC_NA_SAMPLES,
+                has_header=False,
+            )
+        except ValueError as exc:
+            print(
+                "Warning: unable to build balanced entity-pair selector "
+                f"({exc}). Falling back to static few-shot examples."
+            )
+            entity_pair_selector = None
+
+        if USE_SEMANTIC_SELECTOR:
+            try:
+                semantic_selector = build_semantic_similarity_selector(
+                    source_csv="data/train.csv",
+                    label_column="gold",
+                    text_column="text",
+                    has_header=False,
+                    top_k=SEMANTIC_SIMILARITY_SAMPLES,
+                )
+            except (ImportError, ValueError) as exc:
+                print(
+                    "Warning: unable to build semantic similarity selector "
+                    f"({exc}). Continuing without semantic examples."
+                )
+                semantic_selector = None
+
+        if code_prompt_template:
+            prompt_builder = build_code_prompt_builder(
+                code_prompt_template,
+                base_examples_df=base_examples_df,
+                entity_pair_selector=entity_pair_selector,
+                semantic_selector=semantic_selector,
+                log_recorder=record_few_shot_examples,
+            )
+        else:
+            prompt_builder = build_prompt_builder(
+                base_examples_df,
+                entity_pair_selector=entity_pair_selector,
+                semantic_selector=semantic_selector,
+                log_recorder=record_few_shot_examples,
+            )
 
     eval_df = get_dataframe(
         EVAL_CSV_PATH,

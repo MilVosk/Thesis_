@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import random
 import re
 from pathlib import Path
-from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Set
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Set
 import math
 
 import pandas as pd
@@ -32,6 +32,23 @@ except ImportError:
             raise NotImplementedError
 
     CSVLoader = None  # type: ignore[misc,assignment]
+
+try:
+    from langchain.prompts.example_selector.semantic_similarity import (
+        SemanticSimilarityExampleSelector,
+    )
+except ImportError:  # pragma: no cover - optional dependency
+    SemanticSimilarityExampleSelector = None  # type: ignore[misc]
+
+try:
+    from langchain_community.vectorstores import FAISS
+except ImportError:  # pragma: no cover - optional dependency
+    FAISS = None  # type: ignore[misc]
+
+try:
+    from langchain_openai import OpenAIEmbeddings
+except ImportError:  # pragma: no cover - optional dependency
+    OpenAIEmbeddings = None  # type: ignore[misc]
 
 
 ENTITY_TOKEN_PATTERN = re.compile(r"@([A-Z_]+)\$")
@@ -640,3 +657,56 @@ def build_balanced_entity_pair_selector(
         unordered_label_candidates=unordered_label_candidates,
         random_seed=random_seed,
     )
+
+
+def build_semantic_similarity_selector(
+    source_csv: str | Path,
+    *,
+    label_column: str = "gold",
+    text_column: str = "text",
+    has_header: bool = False,
+    top_k: int = 4,
+    embeddings: Any | None = None,
+    vectorstore_cls: Any | None = None,
+) -> Optional[BaseExampleSelector]:
+    """Construct a semantic-similarity selector backed by LangChain."""
+
+    if SemanticSimilarityExampleSelector is None:
+        raise ImportError(
+            "SemanticSimilarityExampleSelector requires langchain with "
+            "semantic similarity utilities installed."
+        )
+
+    if embeddings is None:
+        if OpenAIEmbeddings is None:
+            raise ImportError(
+                "OpenAIEmbeddings unavailable. Provide custom embeddings via "
+                "the 'embeddings' argument."
+            )
+        embeddings = OpenAIEmbeddings()
+
+    if vectorstore_cls is None:
+        if FAISS is None:
+            raise ImportError(
+                "FAISS vector store unavailable. Supply 'vectorstore_cls' with a "
+                "LangChain-compatible implementation."
+            )
+        vectorstore_cls = FAISS
+
+    df = _load_examples_with_langchain(
+        source_csv,
+        label_column=label_column,
+        text_column=text_column,
+        has_header=has_header,
+    )
+    if df.empty:
+        raise ValueError("No rows available to build semantic similarity selector.")
+
+    examples = df[[label_column, text_column]].to_dict("records")
+    selector = SemanticSimilarityExampleSelector.from_examples(
+        examples=examples,
+        embeddings=embeddings,
+        vectorstore_cls=vectorstore_cls,
+        k=top_k,
+    )
+    return selector
