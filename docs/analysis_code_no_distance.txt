@@ -1,0 +1,105 @@
+False Positives(1/2/2)
+----------------------
+
+47 total: 26 HAVE, 17 INFLUENCE, 4 OCCUR_* (three OCCUR_IN plus one misspelled OCCURIN). Most HAVE hallucinations are data-dictionary blocks such as the repeated “Helper (comment Karin)” schema text that only explains column metadata but was tagged HAVE (results1_2_2_code_false_positives.csv:7, :16, :27, :31, :37). Others are study summaries like “Here we explore contemporary anthropogenic global patterns…” that describe datasets rather than entity-level attributes (results1_2_2_code_false_positives.csv:2) or simple inventory counts (results1_2_2_code_false_positives.csv:4).
+INFLUENCE FPs largely come from the same abstract (“The effects of weather on fungal abundance…”) duplicated seven times (results1_2_2_code_false_positives.csv:6, :8, :13, :17, :18, :25, :36) plus similar hypothesis statements about biodiversity impacts (results1_2_2_code_false_positives.csv:9). The prompt fired whenever “influence/affect” appeared near the tagged placeholders.
+OCCUR_* errors stem from protocol paragraphs that mention locations or relative stock sizes but don’t assert a specific occurrence (results1_2_2_code_false_positives.csv:3, :20, :39) and one malformed label OCCURIN (results1_2_2_code_false_positives.csv:39), showing the label list isn’t enforced strictly.
+
+False Negatives(1/2/2)
+-----------------------
+
+57 total: 24 HAVE, 19 OCCUR_IN, 14 INFLUENCE. HAVE misses center on definition or measurement prose where the relation is embedded rather than phrased as X has Y, e.g., “The name consists of the CSP name and the @QUALITY$ of the target @ORGANISM$” (results1_2_2_code_false_negatives.csv:2) and “measuring the physiological drought tolerance… increased the @QUALITY$ of @ORGANISM$” (results1_2_2_code_false_negatives.csv:4). The code prompt appears to expect literal attribute syntax.
+OCCUR_IN mistakes are mostly catalogue or metadata entries that still express location relations—Austin planting guidance (results1_2_2_code_false_negatives.csv:11), GIS descriptions listing districts (results1_2_2_code_false_negatives.csv:23), or nomenclature like “the ‘@ORGANISM$ of @LOCATION$ China’” (results1_2_2_code_false_negatives.csv:19). The model treated them as NA because they resemble documentation.
+INFLUENCE misses involve probabilistic or comparative language without an explicit causal verb, such as “@ORGANISM$ with more restricted distributions were more likely to show high vulnerability” (results1_2_2_code_false_negatives.csv:3) and “Group of competitors around a target @ORGANISM$ for @PHENOMENA$” (results1_2_2_code_false_negatives.csv:15).
+Prompt adjustments
+
+Add NA few-shots built from the Helper/data-dictionary passages and long experimental protocols so the model learns these schema descriptions do not indicate HAVE/OCCUR_IN.
+Include explicit guidance (or validation code) that legal labels are exactly HAVE, INFLUENCE, OCCUR_IN, NA to prevent OCCURIN.
+Provide positive HAVE examples phrased as narrative definitions or measurement descriptions, plus OCCUR_IN few-shots that look like catalog entries or GIS metadata.
+For INFLUENCE recall, supply examples where probabilistic phrases (“more likely,” “important source,” “greater risk”) still count as influence so the model stops defaulting to NA when the causal verb is implicit.
+Next step: if you’re updating the prompt, start by adding the above contrastive examples and re-running 1/2/2 to see whether the Helper and fungal-abstract clusters disappear.
+
+False positives (2/4/4 code prompt)
+----------------------------------
+
+skew toward schema prose: 52 total with 28 HAVE, 20 INFLUENCE, and 4 OCCUR_* (three proper OCCUR_IN plus one malformed OCCURIN). Six different “Helper (comment Karin)” data-dictionary passages are all mis-tagged HAVE (results2_4_4_code_false_positives.csv:6, :17, :30, :34), and study summaries like “Here we explore contemporary anthropogenic global patterns…” (results2_4_4_code_false_positives.csv:2) or “Overall … contained 32 common species” (results2_4_4_code_false_positives.csv:3) keep firing. INFLUENCE FPs are dominated by the repeated “Effects of weather on fungal abundance” abstract (results2_4_4_code_false_positives.csv:5, :7, :12, :18, :20, :27, :40) plus other causal-sounding blurbs (brood pollination, results2_4_4_code_false_positives.csv:8). OCCUR_* errors come from long protocols/soil-metadata that merely mention coordinates or materials, and one again emits OCCURIN (results2_4_4_code_false_positives.csv:23), showing the label list isn’t enforced.
+
+False negatives (49 total: 19 OCCUR_IN, 18 HAVE, 12 INFLUENCE)
+-----------------------------------------------------------
+
+are the same phrasing issues as 1/2/2. HAVE misses are definition or measurement sentences (“measuring the physiological drought tolerance…”, results2_4_4_code_false_negatives.csv:4; “Relationship between Reproductive Allocation…”, results2_4_4_code_false_negatives.csv:11) plus short comparisons like “By contrast, @QUALITY$ did not reach equivalence…” (results2_4_4_code_false_negatives.csv:14). OCCUR_IN recall collapses on catalogue metadata (rain-sampling coordinates, results2_4_4_code_false_negatives.csv:2; Austin tree-planting tool, results2_4_4_code_false_negatives.csv:8; “Source: Last updated …” GIS rows, results2_4_4_code_false_negatives.csv:17, :27, :48). INFLUENCE misses rely on probabilistic or “important source/vital role” language (results2_4_4_code_false_negatives.csv:3, :5, :31) rather than explicit causal verbs.
+
+Fixes: add NA few-shots built directly from the Helper/data-dictionary passages and the fungal abstract to stop those hallucinations; validate the label list to block OCCURIN; and supply positive HAVE/OCCUR_IN/INFLUENCE examples that mirror definition-heavy prose, GIS catalogues, and probabilistic influence wording. Without those targeted contrasts, expanding to 2/4/4 just raises INFLUENCE false positives (20 vs. 17) while the recall gaps stay the same. Next step would be editing analysis_code.txt with this summary and updating the prompt few-shots accordingly.
+
+2/4/3 code prompt run (results2_4_3_code.csv):
+--------------------------------------------------
+
+False positives — 48 total (28 HAVE, 18 INFLUENCE, 2 mislabeled OCCURIN)
+----------------------------------------------------
+HAVE hallucinations remain schema text: every “Helper (comment Karin)” column dictionary is tagged HAVE (results2_4_3_code_false_positives.csv:7, :17, :30, :34), and descriptive summaries like “Here we explore contemporary anthropogenic global patterns…” (results2_4_3_code_false_positives.csv:2) or “Overall … contained 32 common species” (results2_4_3_code_false_positives.csv:3) trigger even though no entity-level attribute is asserted. Unit definitions such as “Soil depth (depth)” (results2_4_3_code_false_positives.csv:9, :46) suffer the same fate.
+INFLUENCE false positives are dominated by the repeated abstract “The effects of weather on fungal abundance…” appearing seven times (results2_4_3_code_false_positives.csv:6, :8, :12, :18, :20, :28, :38) along with background statements like “We found an independent influence…” (results2_4_3_code_false_positives.csv:10) and the biodegradation title (results2_4_3_code_false_positives.csv:4).
+OCCUR_* errors: two long protocols (snow-break survey and pH metadata) emit the malformed label OCCURIN (results2_4_3_code_false_positives.csv:23, :41), which shows label enforcement is still missing.
+
+False negatives — 46 total (18 HAVE, 17 OCCUR_IN, 11 INFLUENCE)
+-------------------------------------------------------------------
+
+HAVE misses cluster around definition or measurement sentences embedded in prose: e.g., “The name consists of … the @QUALITY$ of the target @ORGANISM$” (results2_4_3_code_false_negatives.csv:2), “measuring the physiological drought tolerance… increased the @QUALITY$” (results2_4_3_code_false_negatives.csv:4), the “Relationship between Reproductive Allocation…” title (results2_4_3_code_false_negatives.csv:11), and the indicator catalogue (results2_4_3_code_false_negatives.csv:47).
+OCCUR_IN recall collapses on catalogue-style entries such as the Austin tree-planting tool (results2_4_3_code_false_negatives.csv:8), Eastern Africa protection summary (results2_4_3_code_false_negatives.csv:10), the “@ORGANISM$ of @LOCATION$ China” naming conventions (results2_4_3_code_false_negatives.csv:15, :27), and multiple “Source: Last updated …” GIS metadata blocks (results2_4_3_code_false_negatives.csv:17, :26).
+INFLUENCE misses involve probabilistic wording without explicit causal verbs: “more restricted distributions were more likely to show high vulnerability” (results2_4_3_code_false_negatives.csv:3), “Coastal ecosystems are important sources… play a vital role” (results2_4_3_code_false_negatives.csv:5), “Almost half… vulnerable to the impacts” (results2_4_3_code_false_negatives.csv:9), and “Group of competitors… for @PHENOMENA$” (results2_4_3_code_false_negatives.csv:12).
+Prompt tweaks:
+
+Add NA few-shots built directly from the Helper/data-dictionary passages and the fungal-weather abstract to stop those systematic hallucinations.
+Validate the label list so only HAVE, INFLUENCE, OCCUR_IN, NA are accepted—blocking OCCURIN.
+Supply positive examples that mirror definition-heavy prose, catalogue metadata, and probabilistic/risk phrasing so HAVE/OCCUR_IN/INFLUENCE relations are recognized even when they aren’t expressed as “X has Y”.
+Next step would be updating analysis_code.txt with this summary and then adjusting the few-shot prompt accordingly before rerunning 2/4/3.
+
+4/8/8 code prompt run (results4_8_8_code.csv):
+
+False positives: 45 total (26 HAVE, 15 INFLUENCE, 4 OCCUR_* but all emitted as OCCURIN). 
+---------------------------------------------------------------------------------------
+
+HAVE errors are still schema prose, e.g., every “Helper (comment Karin)” column dictionary is mislabeled HAVE (results4_8_8_code_false_positives.csv:6, :18, :30, :33, :36) as are descriptive summaries like “Here we explore contemporary anthropogenic global patterns…” (results4_8_8_code_false_positives.csv:2) and “Overall … contained 32 common species” (results4_8_8_code_false_positives.csv:3). INFLUENCE hallucinations are driven by the repeated abstract “The effects of weather on fungal abundance…” (results4_8_8_code_false_positives.csv:8, :12, :19, :21, :27, :35) plus causal-sounding study summaries (results4_8_8_code_false_positives.csv:9, :11). OCCUR_* mislabels hit dataset descriptions and protocols (results4_8_8_code_false_positives.csv:4, :7, :23, :41) and still use the bad label OCCURIN.
+
+False negatives: 49 total (20 HAVE, 19 OCCUR_IN, 10 INFLUENCE). 
+----------------------------------------------------------------
+
+HAVE misses are the familiar definition/measurement sentences such as “measuring the physiological drought tolerance…” (results4_8_8_code_false_negatives.csv:4), “Retention cuts supported higher @QUALITY$…” (results4_8_8_code_false_negatives.csv:6, :27), “Relationship between Reproductive Allocation…” (results4_8_8_code_false_negatives.csv:11), and the long indicator catalogue (results4_8_8_code_false_negatives.csv:50). OCCUR_IN recall fails on catalogue or planning text: rain-sampling metadata (results4_8_8_code_false_negatives.csv:2), Austin tree-planting guidance (results4_8_8_code_false_negatives.csv:8), Eastern Africa protection summary (results4_8_8_code_false_negatives.csv:10), the “@ORGANISM$ of @LOCATION$ China” naming conventions (results4_8_8_code_false_negatives.csv:15, :30), and the repeated “Source: Last updated …” GIS entries (results4_8_8_code_false_negatives.csv:17, :29, :48). INFLUENCE misses remain sentences with probabilistic or risk phrasing rather than explicit causal verbs—e.g., “more restricted distributions were more likely to show high vulnerability” (results4_8_8_code_false_negatives.csv:3), “Coastal ecosystems are important sources… play a vital role” (results4_8_8_code_false_negatives.csv:5), “Almost half … were considered vulnerable” (results4_8_8_code_false_negatives.csv:9), “habitat-associated @ORGANISM$ … greater risk” (results4_8_8_code_false_negatives.csv:13).
+
+Fixes: add NA few-shots using the Helper/data-dictionary passages, the fungal abstract, and protocol descriptions; validate the label list so only HAVE, INFLUENCE, OCCUR_IN, NA are allowed; and include positive examples that reflect definition-heavy prose, catalogue metadata, and probabilistic influence statements to recover recall.
+
+
+False positives – zero-shot code prompt
+----------------------------------------
+
+44 mistakes overall (results_zero_shot_code_false_positives.csv), skewed toward documentation that only describes datasets or goals rather than concrete relations; the repeating “Resource limitation … classification” passages at lines 3 and 34 and the long “Helper (comment Karin)” schema block at line 28 all got mislabeled HAVE purely because they mention placeholders.
+INFLUENCE hallucinations are anchored by the weather-and-fungi abstract duplicated at lines 6, 13, 19, 25, and 40, plus other high-level causal headlines (“Energy, Water and Fish” at line 20, REDD incentives at line 21); any clause that says “influence/affect” near placeholders fired.
+OCCUR_IN false alarms stem from generic environment descriptions instead of actual entity-location assertions: “Forests are hot beds of malaria transmission” (line 7), the duplicate heterospecific pollen sentence (lines 14 and 16), aquarium-trade imports (line 17), and the huge GIS metadata dump (line 38). The prompt has no contrastive NA examples for catalog/protocol prose, so those templates default to OCCUR_IN.
+
+False negatives – zero-shot code prompt
+--------------------------------------------
+
+88 misses (results_zero_shot_code_false_negatives.csv), with 48 HAVE, 28 OCCUR_IN, and 12 INFLUENCE. HAVE recall collapses on metadata-like language: crown-architecture formulas (lines 2, 4, 19, 63, 77), helper catalog passages (lines 6–7), biodiversity command docs (as.taxo, lines 10, 41, 66), taxonomy/OTU descriptions (lines 22, 76, 81), and even procedure statements such as seine dimensions (line 52) or plant nitrogen comparisons (line 33).
+OCCUR_IN misses cluster around regulatory or catalog statements that still encode location facts: Irish oyster quarantine rules (lines 11, 51, 74), Austin’s tree-planting tool (line 13 plus the full dataset listing at line 39), Gutianshan reserve coordinates (lines 23, 25), and splash-cup protocols tied to southeast China (lines 36, 46, 56). Because they look like metadata tables, the model drops them to NA.
+INFLUENCE shortfalls arise when causality is phrased probabilistically or comparatively—“restricted distributions were more likely to show high vulnerability” (line 5), “Group of competitors … for @PHENOMENA$” (line 16), tree-neighbour competitive traits (line 38), habitat-fragmentation risks (line 55), buoyancy vs. dissolved matter (line 57), or colonial-era threats (line 67). Without few-shots showing that “more likely”, “threaten”, or “depends on” should count, these stay NA.
+Prompt fixes
+
+Add NA few-shots that are literal copies of the Helper dictionary, GIS/resource listings, and regulation blurbs so the model learns that schema documentation and catalog metadata should not yield HAVE/OCCUR_IN.
+Supply HAVE positives phrased as definitions/measurement notes (crown ratio formula, OTU descriptions) plus OCCUR_IN positives that look like Austin/Gutianshan catalog text to teach the model that those patterns are valid relations.
+Include INFLUENCE few-shots that emphasize comparative likelihood or hypothesized effects (“more likely to show vulnerability”, “threatens ecosystems”, “depends on dissolved matter”) so probabilistic phrasing doesn’t default to NA while also discouraging weather abstract hallucinations.
+
+
+Across 0-shot and the few-shot variants (1/2/2, 2/4/3, 2/4/4, 4/8/8), the error profile barely changes: every configuration hallucinates HAVE on the “Helper (comment Karin)” schema text and other dataset summaries, fires INFLUENCE whenever “influence/affect” appears in the repeated weather–fungi abstract, and treats long catalog/protocol prose as OCCUR_IN even without a concrete occurrence. Conversely, real relations buried inside those same metadata-style passages are almost always missed: definition/measurement sentences drop HAVE, regulatory or GIS catalog text drops OCCUR_IN, and probabilistic “more likely/threatens” phrasing drops INFLUENCE. Increasing few-shot counts does not solve this; it just inflates INFLUENCE false positives (e.g., 20 at 2/4/4) while recall gaps persist (≈50 FN per run, dominated by 40–50% HAVE).
+
+To break the loop you need targeted prompt edits, not more examples: (1) add NA few-shots lifted directly from the Helper dictionary, GIS/resource listings, regulation blurbs, and protocol paragraphs so the model stops labeling documentation as HAVE/OCCUR_IN/INFLUENCE; (2) explicitly validate the label list to block malformed tags like OCCURIN; (3) seed positive few-shots that mirror the hard cases—definition/measurement prose for HAVE, catalogue metadata for OCCUR_IN, and comparative/probabilistic statements (“more likely,” “threatens,” “depends on”) for INFLUENCE. Without those contrastive templates the classifier keeps confusing schema text for facts and ignores real relations hidden in documentation-style wording, regardless of shot count. Next step: update the prompt with those NA and positive exemplars, re-run the zero-shot baseline, and verify that the Helper and weather-abstract clusters disappear before scaling up again.
+
+
+Final analysis:
+Result Comparison
+
+Natural prompts lead multi-class accuracy across every shared shot setting: e.g., 2/4/4 averages 0.5743 multi-class F1 vs. the code prompt’s 0.4872 at the same setting (evaluation_average.csv (line 5), evaluation_average.csv (line 10)). Even the best code run (2/4/3 at 0.4897) trails natural setups like 2/4/3 (0.5411) and 4/8/8 (0.5641) (evaluation_average.csv (line 4), evaluation_average.csv (line 9), evaluation_average.csv (line 11)).
+Code prompts trade that recall for slightly better binary scores: the 4/8/8 code run tops the table with 0.6391 binary F1 and 0.2325 hamming loss, edging the strongest natural binary score of 0.6363/0.2392 at 2/4/4 (evaluation_average.csv (line 6), evaluation_average.csv (line 10)).
+Error totals reflect the same pattern. At zero-shot, the code prompt produces fewer false positives (44 vs. 55) but more false negatives (88 vs. 84) compared with the natural instructions, indicating higher precision but worse coverage (fp_fn_comparison.csv (line 2), fp_fn_comparison.csv (line 3)).
+For 2/4/4, natural prompting again keeps both FP and FN counts lower (49 FP, 46 FN) than the code prompt (52 FP, 49 FN), aligning with the higher multi-class F1 on that configuration (fp_fn_comparison.csv (line 6), fp_fn_comparison.csv (line 9)).
+The 4/8/8 pair shows similar precision/recall trade-offs: code reduces false positives to 45 but lets false negatives match natural (49 vs. natural’s 48), while natural accrues more OCCUR_IN mistakes but balances the classes (fp_fn_comparison.csv (line 7), fp_fn_comparison.csv (line 10)).
+Code outputs also contain invalid OCCURIN labels in every configuration (1–4 per run), whereas natural prompts never emit out-of-set tags, highlighting an additional accuracy issue in the code results themselves (fp_fn_comparison.csv (line 4), fp_fn_comparison.csv (lines 6-7)).
+Overall, the natural-language prompt produces better balanced predictions and higher multi-class F1, while the code prompt favors precision over recall and suffers from the extra invalid label emissions. If you want better coverage per class, stick with the natural prompt; if you need higher binary precision and can tolerate more misses (and fix the label validation), the code prompt can be useful.

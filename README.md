@@ -22,7 +22,7 @@ High-level flow:
 1. Build or refresh few-shot examples from `data/train.csv`.
 2. Assemble an instruction + few-shot prompt per sentence, optionally including a structured "code prompt".
 3. Call the LLM to predict the binary relation flag and the relation label.
-4. Persist predictions to `results.csv`.
+4. Persist predictions to `artifacts/results/results.csv`.
 5. Evaluate performance with `evaluation.py` using both binary and multi-class metrics.
 
 ## LangChain Architecture
@@ -49,20 +49,18 @@ All prompt construction logic lives in `utils/prompt_generator.py` and `main.py`
 - **Output constraints**: The natural-language prompt spells out the only valid responses (`1, HAVE|OCCUR_IN|INFLUENCE` or `0, NA`) so the LLM cannot drift into prose answers.
 - **Deterministic calls**: `utils/gpt_utils.py` escapes each input sentence and calls `gpt-4o-mini` with `temperature=0`/bounded `max_tokens` for reproducible classifications.
 - **Code-style prompting**: When `code_prompt.txt` exists, `build_code_prompt_builder` injects the current sentence into a code template and appends few-shot snippets formatted as pseudo-code assignments (with `results = [1, Have]` etc.). This style encourages deterministic reasoning and is tracked as `prompt_style="code"` in the evaluation log.
-- **Logging**: Every assembled few-shot frame can be recorded through `record_few_shot_examples`, producing `few_shot_log.csv` for later auditing.
+- **Logging**: Every assembled few-shot frame can be recorded through `record_few_shot_examples`, producing `artifacts/logs/few_shot_log.csv` for later auditing.
 
 The static pool created by `ensure_shot_examples` now keeps at least six examples per label, ensuring the base prompt covers diverse wording. The balanced LangChain selector can contribute up to four positive and four `NA` samples per entity pair (respecting global caps), so each inference sees richer, context-aware demonstrations drawn from the full training set.
 
 ## Project Structure
 
 - `main.py` - orchestrates the end-to-end inference workflow described above.
-- `evaluation.py` - computes binary/multi-class metrics, appends them to `evaluation_log.csv`, and captures how many dynamic few-shot examples/inputs were used.
+- `evaluation.py` - computes binary/multi-class metrics, appends them to `artifacts/metrics/evaluation_log.csv`, and captures how many dynamic few-shot examples/inputs were used.
 - `utils/` - helper modules (`data_loader`, prompt generation, LangChain selectors, GPT helpers, etc.).
 - `data/` - CSV inputs such as `train.csv`, `shot.csv`, `test.csv` (evaluation set).
-- `prompts.txt` - snapshot of the latest prompt preview generated from the static few-shot pool.
-- `few_shot_log.csv` - optional log of the exact examples injected per evaluated sentence.
-- `results.csv` - model predictions for the current evaluation batch.
-- `code_prompt.txt` - optional template enabling the structured "code" prompting style.
+- `prompts/` - houses the managed prompt assets (`code_prompt.txt`, `code_prompts.txt`, `prompt.txt`) plus the auto-generated `prompt_preview.txt`.
+- `artifacts/` - run outputs separated into `results/` (e.g., `results/results.csv`), `logs/` (`logs/few_shot_log.csv`), and `metrics/` (`metrics/evaluation_log.csv`, `metrics/evaluation_summary.csv`).
 - `requirements.txt` - dependency list (LangChain is optional but recommended for richer selectors).
 
 ## Installation
@@ -89,15 +87,15 @@ python main.py
 
 Key artifacts:
 
-- `results.csv` - contains `gold`, `text`, `model_prediction_binary`, `model_prediction`.
-- `prompts.txt` - updated preview of the base prompt.
-- `few_shot_log.csv` - lists the exact examples chosen for each evaluated input (if logging enabled).
+- `artifacts/results/results.csv` - contains `gold`, `text`, `model_prediction_binary`, `model_prediction`.
+- `prompts/prompt_preview.txt` - updated preview of the base prompt.
+- `artifacts/logs/few_shot_log.csv` - lists the exact examples chosen for each evaluated input (if logging enabled).
 
 To add embedding-driven retrieval on top of the entity-pair selector, flip `USE_SEMANTIC_SELECTOR = True` (and tweak `SEMANTIC_SIMILARITY_SAMPLES`) in `main.py`. The helper defaults to `OpenAIEmbeddings`, so ensure your `OPENAI_API_KEY` is configured or pass a custom embeddings object when calling `build_semantic_similarity_selector`. If you want to rely purely on dynamic selectors, set `INCLUDE_STATIC_BASE_EXAMPLES = False` and only entity/semantic hits will populate the few-shot frames.
 
 ## Evaluation and Logging
 
-`evaluation.py` loads `results.csv`, computes:
+`evaluation.py` loads `artifacts/results/results.csv`, computes:
 
 - **Binary metrics**: Treats `gold` rows that are neither empty nor `"NA"` as positives (true relations) before comparing against `model_prediction_binary`.
 - **Multi-class metrics**: Restricts to rows with annotated relations and compares `model_prediction` vs. `gold` using micro F1 and Hamming loss.
@@ -106,10 +104,10 @@ To add embedding-driven retrieval on top of the entity-pair selector, flip `USE_
 
 Hamming loss measures the fraction of positions where the prediction disagrees with the reference label. For the binary task it quantifies how often the model flips "relation vs. no relation"; for the multi-class task it captures the proportion of misclassified relation types among the sentences that actually contain a relation. Lower values indicate better performance.
 
-After printing scores, it appends a row to `evaluation_log.csv` that captures:
+After printing scores, it appends a row to `artifacts/metrics/evaluation_log.csv` that captures:
 
 - Timestamp and source file used for scoring.
-- Count of dynamic few-shot examples and unique inputs that triggered them (derived from `few_shot_log.csv`).
+- Count of dynamic few-shot examples and unique inputs that triggered them (derived from `artifacts/logs/few_shot_log.csv`).
 - Binary + multi-class metrics (4 decimal precision).
 - Prompt style (`code` vs. `natural`).
 

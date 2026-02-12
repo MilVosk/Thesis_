@@ -6,6 +6,15 @@ from typing import Optional, Tuple
 import pandas as pd
 from sklearn.metrics import f1_score, hamming_loss
 
+from paths import (
+    CODE_PROMPT_FILE,
+    CODE_PROMPTS_FILE,
+    EVAL_LOG,
+    EVAL_SUMMARY,
+    FEW_SHOT_LOG,
+    RESULTS_CSV,
+    ensure_directories,
+)
 from utils.data_loader import get_dataframe
 
 try:
@@ -14,7 +23,7 @@ except ImportError:  # fallback when main isn't importable
     USE_ZERO_SHOT = False
 
 
-def load_results(path: str = "results.csv") -> pd.DataFrame:
+def load_results(path: Path = RESULTS_CSV) -> pd.DataFrame:
     df = pd.read_csv(path)
     df["gold"] = df["gold"].fillna("").str.strip()
     df["model_prediction"] = df["model_prediction"].fillna("").str.strip()
@@ -105,6 +114,7 @@ def append_csv_row(log_path: Path, fieldnames: list[str], row: dict[str, str]) -
 
 
 def main() -> None:
+    ensure_directories()
     df = load_results()
 
     binary_f1, binary_hamming = compute_binary_metrics(df)
@@ -118,8 +128,8 @@ def main() -> None:
         print(f"Multi-class micro F1: {multi_f1:.2f}")
         print(f"Multi-class Hamming loss: {multi_hamming:.2f}")
 
-    log_path = Path("evaluation_log.csv")
-    few_shot_log = Path("few_shot_log.csv")
+    log_path = EVAL_LOG
+    few_shot_log = FEW_SHOT_LOG
     zero_shot_mode = bool(USE_ZERO_SHOT)
     few_shot_examples = "0"
     few_shot_inputs = "0"
@@ -128,12 +138,11 @@ def main() -> None:
     avg_positive_per_input = "0"
     avg_negative_per_input = "0"
     avg_semantic_per_input = "0"
-    prompt_style = (
-        "code"
-        if Path("code_prompt.txt").exists()
-        and Path("code_prompt.txt").read_text(encoding="utf-8").strip()
-        else "natural"
-    )
+    prompt_style = "natural"
+    for candidate in (CODE_PROMPT_FILE, CODE_PROMPTS_FILE):
+        if candidate.exists() and candidate.read_text(encoding="utf-8").strip():
+            prompt_style = "code"
+            break
     if not zero_shot_mode and few_shot_log.exists():
         try:
             fs_df = pd.read_csv(few_shot_log, keep_default_na=False)
@@ -200,7 +209,7 @@ def main() -> None:
     timestamp = datetime.utcnow().isoformat()
     log_row = {
         "timestamp": timestamp,
-        "results_source": "results.csv",
+        "results_source": RESULTS_CSV.name,
         "few_shot_examples": few_shot_examples,
         "few_shot_inputs": few_shot_inputs,
         "examples_per_input": examples_per_input,
@@ -214,7 +223,7 @@ def main() -> None:
     }
     append_csv_row(log_path, fieldnames, log_row)
 
-    detailed_log_path = Path("evaluation_summary.csv")
+    detailed_log_path = EVAL_SUMMARY
     detailed_fields = [
         "timestamp",
         "train_instances",
