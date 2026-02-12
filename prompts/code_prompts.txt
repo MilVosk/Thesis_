@@ -1,0 +1,161 @@
+# ============================================================
+# KnowCoder Prompt Schema: Biodiversity Relation Extraction
+# ============================================================
+
+# ----------------------------
+# Module 0: Mission Overview
+# ----------------------------
+
+CONTEXT = """
+You classify ONE biodiversity sentence that already contains two tagged entities in the form @ENTITY_TYPE$.
+Follow the schema and checklist defined below to determine whether the sentence explicitly states a relation between the two entity mentions.
+Entity order inside the sentence does NOT matter: treat the pair symmetrically when deciding on relations.
+Return a single line only:
+    - Relation present: 1, HAVE   |   1, OCCUR_IN   |   1, INFLUENCE
+    - No relation: 0, NA
+Absolutely NEVER output reasoning, commentary, or intermediate notes; only the final label line.
+"""
+
+# ----------------------------
+# Module 1: Domain Schema
+# ----------------------------
+
+class Entity:
+    """Base class for all tagged entity mentions."""
+    pass
+
+class ORGANISM(Entity): pass           # Species, taxa, communities
+class ENVIRONMENT(Entity): pass        # Habitats or environmental setups
+class PHENOMENA(Entity): pass          # Processes or events
+class QUALITY(Entity): pass            # Traits, measurements, states
+class LOCATION(Entity): pass           # Named geographic places
+class MATTER(Entity): pass             # Chemicals, compounds, physical matter
+
+
+class Relation:
+    """Base relation linking head->tail."""
+    def __init__(self, head_entity: Entity, tail_entity: Entity):
+        self.head_entity = head_entity
+        self.tail_entity = tail_entity
+
+class Have(Relation): pass
+class OccurIn(Relation): pass
+class Influence(Relation): pass
+
+
+# ----------------------------
+# Module 2: Policy Constraints
+# ----------------------------
+
+ALLOWED_RELATION_PAIRS = {
+    Have: {
+        ("ORGANISM", "ENVIRONMENT"),
+        ("ORGANISM", "QUALITY"),
+        ("ENVIRONMENT", "QUALITY"),
+        ("MATTER", "QUALITY"),
+        ("ENVIRONMENT", "ORGANISM"),
+        ("QUALITY", "ORGANISM"),
+        ("QUALITY", "ENVIRONMENT"),
+        ("QUALITY", "MATTER"),
+    },
+    OccurIn: {
+        ("MATTER", "ENVIRONMENT"),
+        ("ENVIRONMENT", "MATTER"),
+        ("ORGANISM", "LOCATION"),
+        ("LOCATION", "ORGANISM"),
+        ("ORGANISM", "ORGANISM"),
+        ("PHENOMENA", "LOCATION"),
+        ("LOCATION", "PHENOMENA"),
+        ("ENVIRONMENT", "LOCATION"),
+        ("LOCATION", "ENVIRONMENT"),
+    },
+    Influence: {
+        ("ORGANISM", "PHENOMENA"),
+        ("PHENOMENA", "ORGANISM"),
+        ("ORGANISM", "MATTER"),
+        ("MATTER", "ORGANISM"),
+        ("PHENOMENA", "PHENOMENA"),
+        ("PHENOMENA", "QUALITY"),
+        ("QUALITY", "PHENOMENA"),
+        ("PHENOMENA", "ENVIRONMENT"),
+        ("ENVIRONMENT", "PHENOMENA"),
+        ("QUALITY", "QUALITY"),
+    },
+}
+
+RELATION_KEYWORDS = {
+    Have: {"has", "have", "contains", "composition", "trait", "feature", "attribute", "measurement"},
+    OccurIn: {"in", "within", "found", "located", "present", "recorded", "distributed"},
+    Influence: {"influence", "affect", "drive", "impact", "control", "increase", "decrease", "change"},
+}
+
+# Treat entity order as symmetric: when verifying allowed pairs, check both (head, tail) and (tail, head).
+
+
+# ----------------------------
+# Module 3: Decision Checklist
+# ----------------------------
+
+def checklist(sentence: str, head_type: str, tail_type: str):
+    """
+    1. Confirm only two tagged mentions exist.
+    2. Enumerate candidate relations whose allowed pairs contain either (head_type, tail_type) OR (tail_type, head_type),
+       because entity order in the sentence is irrelevant.
+    3. Scan verb phrases between/around the tags.
+       - Reject metadata, study goals, speculation, or mere co-occurrence.
+       - Require explicit language matching the meaning of HAVE, OCCUR_IN, or INFLUENCE.
+    4. If the meaning matches a candidate relation, instantiate Relation internally.
+    5. Otherwise, conclude NA.
+    """
+    pass
+
+# Distance heuristic: if the two annotated entities are separated by long clauses or more than ~20 tokens
+# and no explicit relation cue is present, predict NA.
+def distance_guard(sentence: str, head_entity: Entity, tail_entity: Entity):
+    if token_distance(head_entity, tail_entity) > 20 and not explicit_relation_signals(sentence):
+        return "0, NA"
+    return None
+
+def token_distance(head_entity: Entity, tail_entity: Entity) -> int:
+    """Compute the whitespace-token distance between two annotated spans."""
+    pass
+
+def explicit_relation_signals(sentence: str) -> bool:
+    """
+    Return True if the sentence explicitly states a relation (keywords/phrasing)
+    between the annotated entities even if they are far apart.
+    """
+    pass
+
+
+# ----------------------------
+# Module 4: Execution Template
+# ----------------------------
+
+def classify(sentence: str, head_entity: Entity, tail_entity: Entity):
+    """
+    Implements the following execution order:
+        A. Parse: identify the two tags and extract connector tokens (order does not matter).
+        B. Filter: use ALLOWED_RELATION_PAIRS treating entity types symmetrically.
+        C. Evidence: quote the shortest span that signals HAVE / OCCUR_IN / INFLUENCE.
+        D. Decide:
+            - results = [1, RelationClass] or [0]
+    The reasoning is an internal thought process and must NOT be printed or returned.
+    """
+    results = [0]
+    # The surrounding pipeline injects the concrete sentence and few-shot examples.
+    return results
+
+
+# ----------------------------
+# Module 5: Output Contract
+# ----------------------------
+
+"""
+If evidence satisfies the checklist:
+    results = [1, Have] / [1, OccurIn] / [1, Influence]
+Else:
+    results = [0]
+The final model reply must mirror CONTEXT exactly: `1, RELATION` or `0, NA` with no extra wording.
+All reasoning remains internal and is never printed.
+"""

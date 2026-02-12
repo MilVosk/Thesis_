@@ -1,12 +1,18 @@
-from pathlib import Path
 import csv
 import json
 from typing import Callable, Optional
 
 import pandas as pd
 
+from paths import (
+    CODE_PROMPT_FILE,
+    CODE_PROMPTS_FILE,
+    FEW_SHOT_LOG,
+    PROMPT_PREVIEW_FILE,
+    RESULTS_CSV,
+    ensure_directories,
+)
 from utils.data_loader import get_dataframe
-from utils.extract_shots import extract_shots
 from utils.gpt_utils import generate_gpt_response_with_relations, parse_multiple_responses
 from utils.langchain_shot_selector import (
     build_balanced_entity_pair_selector,
@@ -19,62 +25,28 @@ EVAL_CSV_PATH = "data/test.csv"
 EVAL_HAS_HEADER = True
 # Set to None to evaluate on the full test set.
 EVAL_ROW_LIMIT = None
-CODE_PROMPT_PATH = Path("code_prompt.txt")
+CODE_PROMPT_PATHS = (CODE_PROMPT_FILE, CODE_PROMPTS_FILE)
 
 # Prompt / evaluation configuration
 # Set USE_ZERO_SHOT = True to run pure zero-shot classification (no few-shot examples).
 USE_ZERO_SHOT = True
-
-# Controls how many labeled examples are written to data/shot.csv per label
-# when running in few-shot mode.
-FEWSHOT_SAMPLES_PER_LABEL = 6
+# Toggle to enable the structured code prompt template instead of the natural-language prompt.
+USE_CODE_PROMPT = True
 
 # Controls how many dynamic examples are selected around the current sentence
 # when using the balanced entity-pair selector (few-shot mode only).
-DYNAMIC_POSITIVE_SAMPLES = 4
-DYNAMIC_NA_SAMPLES = 8
-
-# Whether to always include the static few-shot pool in each prompt.
-INCLUDE_STATIC_BASE_EXAMPLES = False
+DYNAMIC_POSITIVE_SAMPLES = 2
+DYNAMIC_NA_SAMPLES = 4
 
 # Controls semantic-similarity retrieval for dynamic few-shot prompts.
 USE_SEMANTIC_SELECTOR = True
-SEMANTIC_SIMILARITY_SAMPLES = 8
+SEMANTIC_SIMILARITY_SAMPLES = 3
 
 RELATION_CLASS_MAP = {
     "HAVE": "Have",
     "OCCUR_IN": "OccurIn",
     "INFLUENCE": "Influence",
 }
-
-
-def ensure_shot_examples(
-    source_csv: str = "data/train.csv",
-    target_csv: str = "data/shot.csv",
-    samples_per_label: int = 6,
-    source_has_header: bool = False,
-) -> None:
-    """
-    Create few-shot examples if they are missing. Recreates the file when it exists
-    but does not include enough rows for each label.
-    """
-    shot_path = Path(target_csv)
-    needs_update = True
-
-    if shot_path.exists():
-        shot_df = get_dataframe(target_csv)
-        counts = shot_df["gold"].value_counts()
-        if not counts.empty and counts.min() >= samples_per_label:
-            needs_update = False
-
-    if needs_update:
-        extract_shots(
-            source_csv=source_csv,
-            target_csv=target_csv,
-            samples_per_label=samples_per_label,
-            has_header=source_has_header,
-        )
-
 
 def build_prompt_builder(
     base_examples_df: Optional[pd.DataFrame],
@@ -115,7 +87,9 @@ def build_prompt_builder(
             if na_examples:
                 frames.append(pd.DataFrame(na_examples).assign(_source="na"))
 
-        if len(frames) == 1:
+        if not frames:
+            combined_df = pd.DataFrame(columns=["gold", "text"])
+        elif len(frames) == 1:
             combined_df = frames[0]
         else:
             combined_df = pd.concat(frames, ignore_index=True)
@@ -235,14 +209,20 @@ def build_zero_shot_code_prompt_builder(template: str) -> Callable[[str], str]:
 
 
 def load_code_prompt() -> Optional[str]:
-    if not CODE_PROMPT_PATH.exists():
-        return None
-    content = CODE_PROMPT_PATH.read_text(encoding="utf-8").strip()
-    return content or None
+    for candidate in CODE_PROMPT_PATHS:
+        if candidate is None:
+            continue
+        if not candidate.exists():
+            continue
+        content = candidate.read_text(encoding="utf-8").strip()
+        if content:
+            return content
+    return None
 
 
 def main() -> None:
-    code_prompt_template = load_code_prompt()
+    ensure_directories()
+    code_prompt_template = load_code_prompt() if USE_CODE_PROMPT else None
     few_shot_logs: list[pd.DataFrame] = []
 
     def record_few_shot_examples(input_text: str, examples_df: pd.DataFrame) -> None:
@@ -258,8 +238,7 @@ def main() -> None:
 
         # Still write a prompt preview (instructions only) for inspection.
         prompt_preview = prompt_generator(shot_df)
-        with open("prompts.txt", "w", encoding="utf-8") as f:
-            f.write(prompt_preview)
+        PROMPT_PREVIEW_FILE.write_text(prompt_preview, encoding="utf-8")
 
         if code_prompt_template:
             prompt_builder = build_zero_shot_code_prompt_builder(code_prompt_template)
@@ -270,43 +249,8 @@ def main() -> None:
                 empty_df = pd.DataFrame(columns=["gold", "text"])
                 return prompt_generator(empty_df)
     else:
-        # Few-shot mode: optionally include static examples plus dynamic selectors.
-        if INCLUDE_STATIC_BASE_EXAMPLES:
-            ensure_shot_examples(samples_per_label=FEWSHOT_SAMPLES_PER_LABEL)
-            shot_df = get_dataframe("data/shot.csv")
-            contrast_examples = pd.DataFrame(
-                [
-                    {
-                        "gold": "INFLUENCE",
-                        "text": (
-                            "Although the same @ORGANISM$ appears in the @ENVIRONMENT$, "
-                            "this sentence explains how shifts in @ORGANISM$ abundance influence "
-                            "@ENVIRONMENT$ nutrient cycling."
-                        ),
-                    },
-                    {
-                        "gold": "OCCUR_IN",
-                        "text": (
-                            "Here the identical @ORGANISM$ is merely reported to occur in the "
-                            "@ENVIRONMENT$ without implying any change or impact."
-                        ),
-                    },
-                    {
-                        "gold": "NA",
-                        "text": (
-                            "A field checklist mentions @ORGANISM$ alongside the @ENVIRONMENT$, "
-                            "but it does not describe a relation between them."
-                        ),
-                    },
-                ]
-            )
-            base_examples_df = pd.concat([shot_df, contrast_examples], ignore_index=True)
-        else:
-            base_examples_df = pd.DataFrame(columns=["gold", "text"])
-
-        prompt_preview = prompt_generator(base_examples_df)
-        with open("prompts.txt", "w", encoding="utf-8") as f:
-            f.write(prompt_preview)
+        # Few-shot mode: rely exclusively on dynamic selectors (no static base pool).
+        base_examples_df = None
 
         semantic_selector = None
         try:
@@ -367,6 +311,10 @@ def main() -> None:
         raise ValueError(f"{EVAL_CSV_PATH} must contain a 'text' column for inference.")
     if "gold" not in eval_df.columns:
         eval_df.insert(0, "gold", "NA")
+    else:
+        eval_df["gold"] = (
+            eval_df["gold"].fillna("").astype(str).str.strip().str.upper()
+        )
 
     if EVAL_ROW_LIMIT is not None:
         eval_df = eval_df.head(EVAL_ROW_LIMIT)
@@ -388,12 +336,12 @@ def main() -> None:
     ].fillna("")
 
     results_df.to_csv(
-        "results.csv",
+        RESULTS_CSV,
         index=False,
         encoding="utf-8",
         quoting=csv.QUOTE_ALL,
     )
-    print("Predictions saved to results.csv")
+    print(f"Predictions saved to {RESULTS_CSV}")
 
     if few_shot_logs:
         log_df = pd.concat(few_shot_logs, ignore_index=True)
@@ -401,12 +349,12 @@ def main() -> None:
             ["input_text", "_source", "gold", "text"]
         ] if "_source" in log_df.columns else log_df
         log_df.to_csv(
-            "few_shot_log.csv",
+            FEW_SHOT_LOG,
             index=False,
             encoding="utf-8",
             quoting=csv.QUOTE_ALL,
         )
-        print("Few-shot usage logged to few_shot_log.csv")
+        print(f"Few-shot usage logged to {FEW_SHOT_LOG}")
 
 
 if __name__ == "__main__":
