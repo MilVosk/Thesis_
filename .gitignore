@@ -6,3 +6,5 @@ __pycache__/
 .ipynb_checkpoints/
 artifacts/
 prompts/prompt_preview.txt
+fp_fn_split.py
+analysis/
