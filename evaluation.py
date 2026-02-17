@@ -45,13 +45,16 @@ def compute_multiclass_metrics(
     df: pd.DataFrame,
 ) -> Tuple[Optional[float], Optional[float]]:
     """Return F1 and Hamming loss for multi-class prediction or (None, None)."""
-    mask_has_relation = df["gold"] != ""
+    normalized_gold = df["gold"].fillna("").str.strip().str.upper()
+    mask_has_relation = (normalized_gold != "") & (normalized_gold != "NA")
     multi_df = df[mask_has_relation].copy()
     if multi_df.empty:
         return None, None
 
-    multi_df["gold"] = multi_df["gold"].str.upper()
-    multi_df["model_prediction"] = multi_df["model_prediction"].str.upper()
+    multi_df["gold"] = normalized_gold[mask_has_relation]
+    multi_df["model_prediction"] = (
+        multi_df["model_prediction"].fillna("").astype(str).str.strip().str.upper()
+    )
     f1 = f1_score(multi_df["gold"], multi_df["model_prediction"], average="micro")
     h_loss = hamming_loss(multi_df["gold"], multi_df["model_prediction"])
     return f1, h_loss

@@ -34,11 +34,18 @@ except ImportError:
     CSVLoader = None  # type: ignore[misc,assignment]
 
 try:
+    # Pre-0.2 LangChain
     from langchain.prompts.example_selector.semantic_similarity import (
         SemanticSimilarityExampleSelector,
     )
 except ImportError:  # pragma: no cover - optional dependency
-    SemanticSimilarityExampleSelector = None  # type: ignore[misc]
+    try:
+        # LangChain 0.2+ split packages
+        from langchain_community.example_selectors.semantic_similarity import (  # type: ignore
+            SemanticSimilarityExampleSelector,
+        )
+    except ImportError:  # pragma: no cover - optional dependency
+        SemanticSimilarityExampleSelector = None  # type: ignore[misc]
 
 try:
     from langchain_community.vectorstores import FAISS
@@ -380,6 +387,7 @@ class BalancedEntityPairSelector(BaseExampleSelector):
     random_seed: int | None = None
     max_pairs: int | None = 2
     max_total_examples: int | None = 12
+    allow_duplicates: bool = True
 
     def __post_init__(self) -> None:
         rng = random.Random(self.random_seed)
@@ -429,6 +437,20 @@ class BalancedEntityPairSelector(BaseExampleSelector):
         remaining: int | None,
     ) -> List[Dict[str, str]]:
         selection: List[Dict[str, str]] = []
+        if self.allow_duplicates:
+            # Cycle through available examples, reusing as needed to reach the target.
+            combined = pool if pool else fallback
+            if not combined:
+                return selection
+            idx = 0
+            while len(selection) < count:
+                candidate = combined[idx % len(combined)]
+                selection.append(candidate)
+                idx += 1
+                if remaining is not None and len(selection) >= remaining:
+                    break
+            return selection
+
         for candidate in pool:
             key = (candidate["gold"], candidate["text"])
             if key in selected_keys:
@@ -580,6 +602,7 @@ def build_balanced_entity_pair_selector(
     na_token: str = "NA",
     has_header: bool = False,
     random_seed: int | None = 13,
+    allow_duplicates: bool = True,
 ) -> Optional[BalancedEntityPairSelector]:
     df = _load_examples_with_langchain(
         source_csv,
@@ -656,6 +679,7 @@ def build_balanced_entity_pair_selector(
         pair_label_candidates=pair_label_candidates,
         unordered_label_candidates=unordered_label_candidates,
         random_seed=random_seed,
+        allow_duplicates=allow_duplicates,
     )
 
 

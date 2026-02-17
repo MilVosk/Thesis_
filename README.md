@@ -41,15 +41,15 @@ LangChain is only required for optional dynamic few-shot selection. The core com
 
 All prompt construction logic lives in `utils/prompt_generator.py` and `main.py`:
 
-- **Instruction block**: A concise task description reminding the model about entity annotations, reasoning steps, and the exact output format (`"1, RELATION"` or `"0, NA"`). It stresses that co-occurrence alone is insufficient.
-- **Few-shot assembly**: `build_prompt_builder` merges several sources of examples:
-  - Static base shots from `data/shot.csv` plus a handful of contrastive sentences hard-coded in `main.py`.
-  - LangChain selectors that inject entity-pair matched samples, semantic-similarity hits, and balanced positive/negative evidence per query.
-  - Optional positive-only or NA-only selectors (helpers exist but are currently unused).
-- **Output constraints**: The natural-language prompt spells out the only valid responses (`1, HAVE|OCCUR_IN|INFLUENCE` or `0, NA`) so the LLM cannot drift into prose answers.
-- **Deterministic calls**: `utils/gpt_utils.py` escapes each input sentence and calls `gpt-4o-mini` with `temperature=0`/bounded `max_tokens` for reproducible classifications.
-- **Code-style prompting**: When `code_prompt.txt` exists, `build_code_prompt_builder` injects the current sentence into a code template and appends few-shot snippets formatted as pseudo-code assignments (with `results = [1, Have]` etc.). This style encourages deterministic reasoning and is tracked as `prompt_style="code"` in the evaluation log.
-- **Logging**: Every assembled few-shot frame can be recorded through `record_few_shot_examples`, producing `artifacts/logs/few_shot_log.csv` for later auditing.
+ - **Instruction block**: A concise task description reminding the model about entity annotations, reasoning steps, and the exact output format (`"1, RELATION"` or `"0, NA"`). It stresses that co-occurrence alone is insufficient.
+ - **Few-shot assembly**: `build_prompt_builder` merges several sources of examples:
+   - Static base shots from `data/shot.csv` plus a handful of contrastive sentences hard-coded in `main.py`.
+   - LangChain selectors that inject entity-pair matched samples, semantic-similarity hits, and balanced positive/negative evidence per query.
+   - Optional positive-only or NA-only selectors (helpers exist but are currently unused).
+ - **Output constraints**: The natural-language prompt spells out the only valid responses (`1, HAVE|OCCUR_IN|INFLUENCE` or `0, NA`) so the LLM cannot drift into prose answers.
+ - **Deterministic calls**: `utils/gpt_utils.py` escapes each input sentence and calls `gpt-4o-mini` with `temperature=0`/bounded `max_tokens` for reproducible classifications.
+ - **Code-style prompting**: When `code_prompt.txt` exists, `build_code_prompt_builder` injects the current sentence into a code template and appends few-shot snippets formatted as pseudo-code assignments (with `results = [1, Have]` etc.). This style encourages deterministic reasoning and is tracked as `prompt_style="code"` in the evaluation log.
+ - **Logging**: Every assembled few-shot frame can be recorded through `record_few_shot_examples`, producing `artifacts/logs/few_shot_log.csv` for later auditing.
 
 The static pool created by `ensure_shot_examples` now keeps at least six examples per label, ensuring the base prompt covers diverse wording. The balanced LangChain selector can contribute up to four positive and four `NA` samples per entity pair (respecting global caps), so each inference sees richer, context-aware demonstrations drawn from the full training set.
 
