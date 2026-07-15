@@ -38,18 +38,18 @@ CODE_PROMPT_PATHS = (CODE_PROMPTS_FILE,)
 
 # Prompt / evaluation configuration
 # Set USE_ZERO_SHOT = True to run pure zero-shot classification (no few-shot examples).
-USE_ZERO_SHOT = True
+USE_ZERO_SHOT = False
 # Toggle to enable the structured code prompt template instead of the natural-language prompt.
-USE_CODE_PROMPT = False
+USE_CODE_PROMPT = True
 
 # Controls how many dynamic examples are selected around the current sentence
 # when using the balanced entity-pair selector (few-shot mode only).
-DYNAMIC_POSITIVE_SAMPLES = 1
-DYNAMIC_NA_SAMPLES = 2
+DYNAMIC_POSITIVE_SAMPLES = 4
+DYNAMIC_NA_SAMPLES = 8
 
 # Controls semantic-similarity retrieval for dynamic few-shot prompts.
 USE_SEMANTIC_SELECTOR = True
-SEMANTIC_SIMILARITY_SAMPLES = 2
+SEMANTIC_SIMILARITY_SAMPLES = 8
 
 def build_prompt_builder(
     *,
