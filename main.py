@@ -1,11 +1,12 @@
+import argparse
 import csv
 import json
+from pathlib import Path
 from typing import Callable, Optional
 
 import pandas as pd
 
 from paths import (
-    CODE_PROMPT_FILE,
     CODE_PROMPTS_FILE,
     FEW_SHOT_LOG,
     PROMPT_PREVIEW_FILE,
@@ -18,50 +19,49 @@ from utils.langchain_shot_selector import (
     build_balanced_entity_pair_selector,
     build_semantic_similarity_selector,
 )
-from utils.prompt_generator import prompt_generator
+from utils.prompt_generator import (
+    prompt_generator,
+    build_code_prompt_builder,
+    build_zero_shot_code_prompt_builder,
+    RELATION_CLASS_MAP,
+)
 
 
-EVAL_CSV_PATH = "data/test.csv"
-EVAL_HAS_HEADER = True
+EVAL_CSV_PATH_DEFAULT = "data/german_test.csv"
+EVAL_HAS_HEADER_DEFAULT = True
+# Training data (few-shot pool) defaults
+TRAIN_CSV_PATH_DEFAULT = "data/german_train.csv"
+TRAIN_HAS_HEADER_DEFAULT = False
 # Set to None to evaluate on the full test set.
-EVAL_ROW_LIMIT = None
-CODE_PROMPT_PATHS = (CODE_PROMPT_FILE, CODE_PROMPTS_FILE)
+EVAL_ROW_LIMIT_DEFAULT = None
+CODE_PROMPT_PATHS = (CODE_PROMPTS_FILE,)
 
 # Prompt / evaluation configuration
 # Set USE_ZERO_SHOT = True to run pure zero-shot classification (no few-shot examples).
-USE_ZERO_SHOT = False
+USE_ZERO_SHOT = True
 # Toggle to enable the structured code prompt template instead of the natural-language prompt.
 USE_CODE_PROMPT = False
 
 # Controls how many dynamic examples are selected around the current sentence
 # when using the balanced entity-pair selector (few-shot mode only).
-DYNAMIC_POSITIVE_SAMPLES = 2
-DYNAMIC_NA_SAMPLES = 4
+DYNAMIC_POSITIVE_SAMPLES = 1
+DYNAMIC_NA_SAMPLES = 2
 
 # Controls semantic-similarity retrieval for dynamic few-shot prompts.
 USE_SEMANTIC_SELECTOR = True
-SEMANTIC_SIMILARITY_SAMPLES = 4
-
-RELATION_CLASS_MAP = {
-    "HAVE": "Have",
-    "OCCUR_IN": "OccurIn",
-    "INFLUENCE": "Influence",
-}
+SEMANTIC_SIMILARITY_SAMPLES = 2
 
 def build_prompt_builder(
-    base_examples_df: Optional[pd.DataFrame],
     *,
     entity_pair_selector=None,
     semantic_selector=None,
     na_selector=None,
     positive_selector=None,
     log_recorder=None,
+    base_prompt_path: Optional[Path] = None,
 ):
     def _builder(text: str) -> str:
         frames: list[pd.DataFrame] = []
-        if base_examples_df is not None and not base_examples_df.empty:
-            frames.append(base_examples_df.assign(_source="base"))
-
         if entity_pair_selector is not None:
             dynamic_examples = entity_pair_selector.select_examples({"text": text})
             if dynamic_examples:
@@ -98,7 +98,7 @@ def build_prompt_builder(
             log_recorder(text, combined_df.copy())
 
         prompt_df = combined_df.drop(columns=["_source"], errors="ignore")
-        return prompt_generator(prompt_df)
+        return prompt_generator(prompt_df, base_prompt_path=base_prompt_path)
 
     return _builder
 
@@ -106,7 +106,6 @@ def build_prompt_builder(
 def build_code_prompt_builder(
     template: str,
     *,
-    base_examples_df: Optional[pd.DataFrame] = None,
     entity_pair_selector=None,
     semantic_selector=None,
     log_recorder=None,
@@ -115,9 +114,6 @@ def build_code_prompt_builder(
 
     def _builder(text: str) -> str:
         frames: list[pd.DataFrame] = []
-        if base_examples_df is not None and not base_examples_df.empty:
-            frames.append(base_examples_df.assign(_source="base"))
-
         if entity_pair_selector is not None:
             dynamic_examples = entity_pair_selector.select_examples({"text": text})
             if dynamic_examples:
@@ -221,7 +217,52 @@ def load_code_prompt() -> Optional[str]:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Run relation extraction inference.")
+    parser.add_argument(
+        "--eval-csv",
+        default=EVAL_CSV_PATH_DEFAULT,
+        help=f"Path to evaluation CSV (default: {EVAL_CSV_PATH_DEFAULT})",
+    )
+    parser.add_argument(
+        "--train-csv",
+        default=TRAIN_CSV_PATH_DEFAULT,
+        help=(
+            "Path to training CSV used for few-shot selection "
+            f"(default: {TRAIN_CSV_PATH_DEFAULT})"
+        ),
+    )
+    parser.add_argument(
+        "--eval-has-header",
+        action="store_true",
+        default=EVAL_HAS_HEADER_DEFAULT,
+        help="Set if the evaluation CSV has a header row.",
+    )
+    parser.add_argument(
+        "--train-has-header",
+        action="store_true",
+        default=TRAIN_HAS_HEADER_DEFAULT,
+        help="Set if the training CSV has a header row (few-shot pool).",
+    )
+    parser.add_argument(
+        "--eval-row-limit",
+        type=int,
+        default=EVAL_ROW_LIMIT_DEFAULT,
+        help="Optional max number of rows to evaluate.",
+    )
+    parser.add_argument(
+        "--natural-prompt-lang",
+        choices=["en", "de"],
+        default="en",
+        help="Choose natural-language prompt (en or de).",
+    )
+    args = parser.parse_args()
+
     ensure_directories()
+    natural_prompt_path = (
+        Path("prompts/natural_language_prompt_de.txt")
+        if args.natural_prompt_lang == "de"
+        else Path("prompts/natural_language_prompt.txt")
+    )
     code_prompt_template = load_code_prompt() if USE_CODE_PROMPT else None
     few_shot_logs: list[pd.DataFrame] = []
 
@@ -237,7 +278,9 @@ def main() -> None:
         entity_pair_selector = None
 
         # Still write a prompt preview (instructions only) for inspection.
-        prompt_preview = prompt_generator(shot_df)
+        prompt_preview = prompt_generator(
+            shot_df, base_prompt_path=natural_prompt_path
+        )
         PROMPT_PREVIEW_FILE.write_text(prompt_preview, encoding="utf-8")
 
         if code_prompt_template:
@@ -247,35 +290,35 @@ def main() -> None:
             def prompt_builder(text: str) -> str:  # type: ignore[assignment]
                 _ = text
                 empty_df = pd.DataFrame(columns=["gold", "text"])
-                return prompt_generator(empty_df)
+                return prompt_generator(
+                    empty_df, base_prompt_path=natural_prompt_path
+                )
     else:
         # Few-shot mode: rely exclusively on dynamic selectors (no static base pool).
-        base_examples_df = None
-
         semantic_selector = None
         try:
             entity_pair_selector = build_balanced_entity_pair_selector(
-                source_csv="data/train.csv",
+                source_csv=args.train_csv,
                 label_column="gold",
                 text_column="text",
                 positive_samples=DYNAMIC_POSITIVE_SAMPLES,
                 na_samples=DYNAMIC_NA_SAMPLES,
-                has_header=False,
+                has_header=args.train_has_header,
             )
         except ValueError as exc:
             print(
                 "Warning: unable to build balanced entity-pair selector "
-                f"({exc}). Falling back to static few-shot examples."
+                f"({exc}). Continuing without entity-pair examples."
             )
             entity_pair_selector = None
 
         if USE_SEMANTIC_SELECTOR:
             try:
                 semantic_selector = build_semantic_similarity_selector(
-                    source_csv="data/train.csv",
+                    source_csv=args.train_csv,
                     label_column="gold",
                     text_column="text",
-                    has_header=False,
+                    has_header=args.train_has_header,
                     top_k=SEMANTIC_SIMILARITY_SAMPLES,
                 )
             except (ImportError, ValueError) as exc:
@@ -288,27 +331,26 @@ def main() -> None:
         if code_prompt_template:
             prompt_builder = build_code_prompt_builder(
                 code_prompt_template,
-                base_examples_df=base_examples_df,
                 entity_pair_selector=entity_pair_selector,
                 semantic_selector=semantic_selector,
                 log_recorder=record_few_shot_examples,
             )
         else:
             prompt_builder = build_prompt_builder(
-                base_examples_df,
                 entity_pair_selector=entity_pair_selector,
                 semantic_selector=semantic_selector,
                 log_recorder=record_few_shot_examples,
+                base_prompt_path=natural_prompt_path,
             )
 
     eval_df = get_dataframe(
-        EVAL_CSV_PATH,
+        args.eval_csv,
         columns=None,
-        has_header=EVAL_HAS_HEADER,
+        has_header=args.eval_has_header,
         keep_default_na=False,
     )
     if "text" not in eval_df.columns:
-        raise ValueError(f"{EVAL_CSV_PATH} must contain a 'text' column for inference.")
+        raise ValueError(f"{args.eval_csv} must contain a 'text' column for inference.")
     if "gold" not in eval_df.columns:
         eval_df.insert(0, "gold", "NA")
     else:
@@ -316,8 +358,8 @@ def main() -> None:
             eval_df["gold"].fillna("").astype(str).str.strip().str.upper()
         )
 
-    if EVAL_ROW_LIMIT is not None:
-        eval_df = eval_df.head(EVAL_ROW_LIMIT)
+    if args.eval_row_limit is not None:
+        eval_df = eval_df.head(args.eval_row_limit)
 
     responses = generate_gpt_response_with_relations(prompt_builder, eval_df)
     parsed_predictions = parse_multiple_responses(responses)

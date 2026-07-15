@@ -321,7 +321,7 @@ def build_entity_pair_selector(
     except ValueError as exc:
         print(
             "Warning: unable to build entity-pair selector (" + str(exc) + ")."
-            " Falling back to static few-shot examples."
+            " Continuing without entity-pair examples."
         )
         return None
 

@@ -1,9 +1,5 @@
-# ============================================================
-# KnowCoder Prompt Schema: Biodiversity Relation Extraction
-# ============================================================
-
 # ----------------------------
-# Module 0: Mission Overview
+# Module 1: Overview
 # ----------------------------
 
 CONTEXT = """
@@ -17,7 +13,7 @@ Absolutely NEVER output reasoning, commentary, or intermediate notes; only the f
 """
 
 # ----------------------------
-# Module 1: Domain Schema
+# Module 2: Domain Schema
 # ----------------------------
 
 class Entity:
@@ -44,9 +40,8 @@ class Influence(Relation): pass
 
 
 # ----------------------------
-# Module 2: Policy Constraints
+# Module 3: Constraints
 # ----------------------------
-
 ALLOWED_RELATION_PAIRS = {
     Have: {
         ("ORGANISM", "ENVIRONMENT"),
@@ -91,9 +86,8 @@ RELATION_KEYWORDS = {
 
 # Treat entity order as symmetric: when verifying allowed pairs, check both (head, tail) and (tail, head).
 
-
 # ----------------------------
-# Module 3: Decision Checklist
+# Module 4: Decision Procedure
 # ----------------------------
 
 def checklist(sentence: str, head_type: str, tail_type: str):
@@ -109,8 +103,6 @@ def checklist(sentence: str, head_type: str, tail_type: str):
     """
     pass
 
-# Distance heuristic: if the two annotated entities are separated by long clauses or more than ~20 tokens
-# and no explicit relation cue is present, predict NA.
 def distance_guard(sentence: str, head_entity: Entity, tail_entity: Entity):
     if token_distance(head_entity, tail_entity) > 20 and not explicit_relation_signals(sentence):
         return "0, NA"
@@ -129,7 +121,7 @@ def explicit_relation_signals(sentence: str) -> bool:
 
 
 # ----------------------------
-# Module 4: Execution Template
+# Module 5: Execution Process
 # ----------------------------
 
 def classify(sentence: str, head_entity: Entity, tail_entity: Entity):
@@ -148,7 +140,7 @@ def classify(sentence: str, head_entity: Entity, tail_entity: Entity):
 
 
 # ----------------------------
-# Module 5: Output Contract
+# Module 6: Output Specification
 # ----------------------------
 
 """

@@ -1,6 +1,9 @@
+pandas
+scikit-learn
+python-dotenv
+openai
+requests
 langchain
 langchain-openai
-openai
-pandas
-python-dotenv
-scikit-learn
+langchain-community
+faiss-cpu

@@ -22,6 +22,7 @@ PROMPT_PREVIEW_FILE = PROMPTS_DIR / "prompt_preview.txt"
 FEW_SHOT_LOG = LOGS_DIR / "few_shot_log.csv"
 EVAL_LOG = METRICS_DIR / "evaluation_log.csv"
 EVAL_SUMMARY = METRICS_DIR / "evaluation_summary.csv"
+EVAL_AVERAGE = METRICS_DIR / "evaluation_average.csv"
 
 
 def ensure_directories() -> None:

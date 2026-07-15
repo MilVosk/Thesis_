@@ -1,40 +1,34 @@
-def prompt_generator(examples_df):
-    prompt = [
-        (
-            "You are an information extraction model specialized in biodiversity texts.\n"
-            "Task: Given ONE sentence containing annotated entities, decide whether the sentence explicitly states a semantic relation between the entity mentions.\n"
-            "Entities appear as @ENTITY_TYPE$ where ENTITY_TYPE ∈ {ORGANISM, ENVIRONMENT, PHENOMENA, QUALITY, LOCATION, MATTER}.\n"
-            "OUTPUT FORMAT (strict):\n"
-            
-            "- If a relation is present: 1, HAVE | 1, OCCUR_IN | 1, INFLUENCE\n"
-            "- If no relation is present: 0, NA\n"
-            "Return ONLY the final label line. No extra text.\n"
-            "If you output '1', you must explicitly name the relation label (HAVE, OCCUR_IN, or INFLUENCE); never leave it blank.\n"
-            
-            "IMPORTANT DECISION RULES:\n"
-            "1) First decide if the sentence contains an explicit relation statement between the named entities.\n"
-            "- Co-occurrence is NOT enough.\n"
-            "- Carefully read the sentence to detect, wether there is relation between the entities or not.\n"
-            "2) If (and only if) an explicit link exists, choose exactly ONE relation label:\n"
-            "A) OCCUR_IN\n"
-            "Choose OCCUR_IN if one entity is stated to be located in / found in / present in / recorded in / distributed in a place or setting.\n"
-            "Allowed type pairs (order irrelevant): MATTER-ENVIRONMENT, ENVIRONMENT-MATTER, ORGANISM-LOCATION, LOCATION-ORGANISM,\n"
-            "ORGANISM-ORGANISM, PHENOMENA-LOCATION, LOCATION-PHENOMENA, ENVIRONMENT-LOCATION, LOCATION-ENVIRONMENT.\n"
-            "B) HAVE\n"
-            "Choose HAVE if one entity is a property, attribute, component, part, measurement, or state of another.\n"
-            "Allowed type pairs (order irrelevant): ORGANISM-ENVIRONMENT, ORGANISM-QUALITY, ENVIRONMENT-QUALITY, MATTER-QUALITY,\n"
-            "ENVIRONMENT-ORGANISM, QUALITY-ORGANISM, QUALITY-ENVIRONMENT, QUALITY-MATTER.\n"
-            "C) INFLUENCE\n"
-            "Choose INFLUENCE only if the sentence states that changing one entity has an impact on the other.\n"
-            "Allowed type pairs (order irrelevant): ORGANISM-PHENOMENA, PHENOMENA-ORGANISM, ORGANISM-MATTER, MATTER-ORGANISM,\n"
-            "PHENOMENA-PHENOMENA, PHENOMENA-QUALITY, QUALITY-PHENOMENA, PHENOMENA-ENVIRONMENT, ENVIRONMENT-PHENOMENA, QUALITY-QUALITY.\n"
-            "4)Mere correlation, association, or background description is NOT sufficient.\n"
-            "5) Direction is irrelevant.\n"
-            "6)If the annotated entities are far apart in the sentence (e.g., separated by long clauses or >20 tokens) prefer 0, NA unless the text states an explicit relation.\n"
-            "Return exactly one line in the required schema.\n"
+import json
+from pathlib import Path
+from typing import Callable, Optional
 
-        )
-    ]
+import pandas as pd
+
+NATURAL_PROMPT_FILE = Path("prompts/natural_language_prompt.txt")
+CODE_PROMPT_PATHS = (Path("prompts/code_prompts.txt"),)
+
+RELATION_CLASS_MAP = {
+    "HAVE": "Have",
+    "OCCUR_IN": "OccurIn",
+    "INFLUENCE": "Influence",
+}
+
+
+def _load_base_prompt(path: Optional[Path] = None) -> str:
+    target = path or NATURAL_PROMPT_FILE
+    if target.exists():
+        content = target.read_text(encoding="utf-8").strip()
+        if content:
+            return content
+    raise FileNotFoundError(
+        f"Natural-language prompt missing or empty at {target}. "
+        "Please create the file with the instructions."
+    )
+
+
+def prompt_generator(examples_df, base_prompt_path: Optional[Path] = None):
+    base_prompt = _load_base_prompt(base_prompt_path)
+    prompt = [base_prompt]
 
     for idx, row in examples_df.iterrows():
         raw_label = str(row["gold"]).strip()
@@ -50,3 +44,104 @@ def prompt_generator(examples_df):
 
     prompt.append("Classify the next sentence following the same output format.")
     return "\n".join(prompt)
+
+
+def build_code_prompt_builder(
+    template: str,
+    *,
+    entity_pair_selector=None,
+    semantic_selector=None,
+    log_recorder=None,
+) -> Callable[[str], str]:
+    placeholder = "{INPUT_TEXT}"
+
+    def _builder(text: str) -> str:
+        frames: list[pd.DataFrame] = []
+        if entity_pair_selector is not None:
+            dynamic_examples = entity_pair_selector.select_examples({"text": text})
+            if dynamic_examples:
+                frames.append(
+                    pd.DataFrame(dynamic_examples).assign(_source="entity_pair")
+                )
+        if semantic_selector is not None:
+            semantic_examples = semantic_selector.select_examples({"text": text})
+            if semantic_examples:
+                frames.append(
+                    pd.DataFrame(semantic_examples).assign(_source="semantic")
+                )
+
+        if not frames:
+            combined_df = pd.DataFrame(columns=["gold", "text"])
+        elif len(frames) == 1:
+            combined_df = frames[0]
+        else:
+            combined_df = pd.concat(frames, ignore_index=True)
+
+        if log_recorder is not None:
+            log_recorder(text, combined_df.copy())
+
+        snippets: list[str] = []
+        for _, row in combined_df.iterrows():
+            label = str(row["gold"]).strip().upper()
+            example_text = str(row["text"]).strip()
+            class_name = RELATION_CLASS_MAP.get(label)
+            if not label or label == "NA" or class_name is None:
+                snippets.append(
+                    "# Few-shot Example (NA)\n"
+                    f"context = {json.dumps(example_text)}\n"
+                    'reasoning = "no explicit relation"\n'
+                    "results = [0]"
+                )
+            else:
+                snippets.append(
+                    f"# Few-shot Example ({label})\n"
+                    f"context = {json.dumps(example_text)}\n"
+                    f'reasoning = "{label} example"\n'
+                    f"results = [1, {class_name}]"
+                )
+
+        if not snippets:
+            snippets.append(
+                "# Few-shot Example (NA)\n"
+                '# (no dynamic examples available)\n'
+                'reasoning = "no explicit relation"\n'
+                "results = [0]"
+            )
+
+        few_shot_section = "\n\n".join(snippets)
+
+        if placeholder in template:
+            prompt_body = template.replace(placeholder, text)
+        else:
+            escaped = json.dumps(text)
+            prompt_body = (
+                f"{template.rstrip()}\n\n# =========================\n"
+                f"# Input\n# =========================\ncontext = {escaped}\n"
+            )
+
+        return (
+            f"{prompt_body}\n\n# =========================\n"
+            "# Few-shot Examples\n# =========================\n"
+            f"{few_shot_section}"
+        )
+
+    return _builder
+
+
+def build_zero_shot_code_prompt_builder(template: str) -> Callable[[str], str]:
+    """
+    Build a prompt builder that uses the code-style template in pure zero-shot
+    mode (no few-shot examples are appended).
+    """
+    placeholder = "{INPUT_TEXT}"
+
+    def _builder(text: str) -> str:
+        if placeholder in template:
+            return template.replace(placeholder, text)
+        escaped = json.dumps(text)
+        return (
+            f"{template.rstrip()}\n\n# =========================\n"
+            f"# Input\n# =========================\ncontext = {escaped}\n"
+        )
+
+    return _builder

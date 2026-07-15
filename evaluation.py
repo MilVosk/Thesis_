@@ -1,16 +1,16 @@
 import csv
+import re
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 
 import pandas as pd
-from sklearn.metrics import f1_score, hamming_loss
+from sklearn.metrics import f1_score
 
 from paths import (
-    CODE_PROMPT_FILE,
-    CODE_PROMPTS_FILE,
     EVAL_LOG,
     EVAL_SUMMARY,
+    EVAL_AVERAGE,
     FEW_SHOT_LOG,
     RESULTS_CSV,
     ensure_directories,
@@ -18,9 +18,10 @@ from paths import (
 from utils.data_loader import get_dataframe
 
 try:
-    from main import USE_ZERO_SHOT
+    from main import USE_ZERO_SHOT, USE_CODE_PROMPT
 except ImportError:  # fallback when main isn't importable
     USE_ZERO_SHOT = False
+    USE_CODE_PROMPT = False
 
 
 def load_results(path: Path = RESULTS_CSV) -> pd.DataFrame:
@@ -30,34 +31,30 @@ def load_results(path: Path = RESULTS_CSV) -> pd.DataFrame:
     return df
 
 
-def compute_binary_metrics(df: pd.DataFrame) -> Tuple[float, float]:
-    """Return F1 and Hamming loss for relation vs no-relation."""
+def compute_binary_f1(df: pd.DataFrame) -> float:
+    """Return F1 for relation vs no-relation."""
     normalized_gold = df["gold"].fillna("").str.strip().str.upper()
     binary_gold = (normalized_gold != "") & (normalized_gold != "NA")
     binary_gold = binary_gold.astype(int)
     binary_pred = df["model_prediction_binary"].astype(int)
-    f1 = f1_score(binary_gold, binary_pred, average="binary")
-    h_loss = hamming_loss(binary_gold, binary_pred)
-    return f1, h_loss
+    return f1_score(binary_gold, binary_pred, average="binary")
 
 
-def compute_multiclass_metrics(
+def compute_multiclass_f1(
     df: pd.DataFrame,
-) -> Tuple[Optional[float], Optional[float]]:
-    """Return F1 and Hamming loss for multi-class prediction or (None, None)."""
+) -> Optional[float]:
+    """Return micro F1 for multi-class prediction, or None if no gold relations exist."""
     normalized_gold = df["gold"].fillna("").str.strip().str.upper()
     mask_has_relation = (normalized_gold != "") & (normalized_gold != "NA")
     multi_df = df[mask_has_relation].copy()
     if multi_df.empty:
-        return None, None
+        return None
 
     multi_df["gold"] = normalized_gold[mask_has_relation]
     multi_df["model_prediction"] = (
         multi_df["model_prediction"].fillna("").astype(str).str.strip().str.upper()
     )
-    f1 = f1_score(multi_df["gold"], multi_df["model_prediction"], average="micro")
-    h_loss = hamming_loss(multi_df["gold"], multi_df["model_prediction"])
-    return f1, h_loss
+    return f1_score(multi_df["gold"], multi_df["model_prediction"], average="micro")
 
 
 def count_training_instances(path: str = "data/train.csv") -> Optional[int]:
@@ -117,19 +114,40 @@ def append_csv_row(log_path: Path, fieldnames: list[str], row: dict[str, str]) -
 
 
 def main() -> None:
+    def detect_language(text_series: pd.Series) -> str:
+        """Lightweight heuristic detector (de vs en) without extra deps."""
+        sample = " ".join(text_series.fillna("").astype(str).head(200).tolist()).lower()
+        german_score = 0
+        english_score = 0
+
+        # Umlauts / ß strongly indicate German.
+        german_score += len(re.findall(r"[äöüß]", sample))
+
+        german_markers = [
+            " der ", " die ", " und ", " mit ", " für ", " auf ", " nicht ",
+            " zum ", " im ", " des ", " von ", " ist ", " eine ", " einen ", " einem "
+        ]
+        english_markers = [
+            " the ", " and ", " of ", " in ", " for ", " with ", " is ", " are ",
+            " to ", " from ", " that ", " this ", " an "
+        ]
+
+        german_score += sum(sample.count(tok) for tok in german_markers)
+        english_score += sum(sample.count(tok) for tok in english_markers)
+
+        return "de" if german_score > english_score else "en"
+
     ensure_directories()
     df = load_results()
 
-    binary_f1, binary_hamming = compute_binary_metrics(df)
+    binary_f1 = compute_binary_f1(df)
     print(f"Binary F1 (relation vs none): {binary_f1:.2f}")
-    print(f"Binary Hamming loss: {binary_hamming:.2f}")
 
-    multi_f1, multi_hamming = compute_multiclass_metrics(df)
+    multi_f1 = compute_multiclass_f1(df)
     if multi_f1 is None:
         print("No gold relations available for multi-class evaluation.")
     else:
         print(f"Multi-class micro F1: {multi_f1:.2f}")
-        print(f"Multi-class Hamming loss: {multi_hamming:.2f}")
 
     log_path = EVAL_LOG
     few_shot_log = FEW_SHOT_LOG
@@ -141,11 +159,7 @@ def main() -> None:
     avg_positive_per_input = "0"
     avg_negative_per_input = "0"
     avg_semantic_per_input = "0"
-    prompt_style = "natural"
-    for candidate in (CODE_PROMPT_FILE, CODE_PROMPTS_FILE):
-        if candidate.exists() and candidate.read_text(encoding="utf-8").strip():
-            prompt_style = "code"
-            break
+    prompt_style = "code" if USE_CODE_PROMPT else "natural"
     if not zero_shot_mode and few_shot_log.exists():
         try:
             fs_df = pd.read_csv(few_shot_log, keep_default_na=False)
@@ -204,24 +218,24 @@ def main() -> None:
         "few_shot_inputs",
         "examples_per_input",
         "binary_f1",
-        "binary_hamming_loss",
         "multi_class_f1",
-        "multi_class_hamming_loss",
         "prompt_style",
     ]
     timestamp = datetime.utcnow().isoformat()
+    def _int_str(val: str) -> str:
+        try:
+            return str(int(round(float(val))))
+        except Exception:
+            return val
+
     log_row = {
         "timestamp": timestamp,
         "results_source": RESULTS_CSV.name,
         "few_shot_examples": few_shot_examples,
         "few_shot_inputs": few_shot_inputs,
-        "examples_per_input": examples_per_input,
+        "examples_per_input": _int_str(examples_per_input),
         "binary_f1": f"{binary_f1:.4f}",
-        "binary_hamming_loss": f"{binary_hamming:.4f}",
         "multi_class_f1": "" if multi_f1 is None else f"{multi_f1:.4f}",
-        "multi_class_hamming_loss": ""
-        if multi_hamming is None
-        else f"{multi_hamming:.4f}",
         "prompt_style": prompt_style,
     }
     append_csv_row(log_path, fieldnames, log_row)
@@ -231,32 +245,76 @@ def main() -> None:
         "timestamp",
         "train_instances",
         "test_instances",
+        "test_language",
         "positive_per_input",
         "negative_per_input",
         "semantic_per_input",
         "binary_f1",
-        "binary_hamming_loss",
         "multi_class_f1",
-        "multi_class_hamming_loss",
         "prompt_style",
     ]
     train_instances = count_training_instances()
+    detected_language = detect_language(df["text"]) if "text" in df.columns else "en"
     detailed_row = {
         "timestamp": timestamp,
         "train_instances": "" if train_instances is None else str(train_instances),
         "test_instances": str(len(df)),
-        "positive_per_input": avg_positive_per_input,
-        "negative_per_input": avg_negative_per_input,
-        "semantic_per_input": avg_semantic_per_input,
+        "test_language": detected_language,
+        "positive_per_input": _int_str(avg_positive_per_input),
+        "negative_per_input": _int_str(avg_negative_per_input),
+        "semantic_per_input": _int_str(avg_semantic_per_input),
         "binary_f1": f"{binary_f1:.4f}",
-        "binary_hamming_loss": f"{binary_hamming:.4f}",
         "multi_class_f1": "" if multi_f1 is None else f"{multi_f1:.4f}",
-        "multi_class_hamming_loss": ""
-        if multi_hamming is None
-        else f"{multi_hamming:.4f}",
         "prompt_style": prompt_style,
     }
     append_csv_row(detailed_log_path, detailed_fields, detailed_row)
+
+    # If we have at least 3 runs for the same combination, log their average.
+    try:
+        if EVAL_SUMMARY.exists():
+            summary_df = pd.read_csv(EVAL_SUMMARY, keep_default_na=False)
+            combo_mask = (
+                (summary_df["prompt_style"] == detailed_row["prompt_style"])
+                & (summary_df["test_language"] == detailed_row["test_language"])
+                & (summary_df["positive_per_input"] == detailed_row["positive_per_input"])
+                & (summary_df["negative_per_input"] == detailed_row["negative_per_input"])
+                & (summary_df["semantic_per_input"] == detailed_row["semantic_per_input"])
+            )
+            combo_df = summary_df.loc[combo_mask].copy()
+            if len(combo_df) >= 3:
+                combo_df = combo_df.sort_values("timestamp").tail(3)
+                def _mean(col: str) -> Optional[float]:
+                    vals = pd.to_numeric(combo_df[col], errors="coerce").dropna()
+                    return None if vals.empty else vals.mean()
+
+                avg_binary_f1 = _mean("binary_f1")
+                avg_multi_f1 = _mean("multi_class_f1")
+
+                avg_fields = [
+                    "timestamp",
+                    "runs_averaged",
+                    "prompt_style",
+                    "test_language",
+                    "positive_per_input",
+                    "negative_per_input",
+                    "semantic_per_input",
+                    "binary_f1",
+                    "multi_class_f1",
+                ]
+                avg_row = {
+                    "timestamp": timestamp,
+                    "runs_averaged": "3",
+                    "prompt_style": detailed_row["prompt_style"],
+                    "test_language": detailed_row["test_language"],
+                    "positive_per_input": detailed_row["positive_per_input"],
+                    "negative_per_input": detailed_row["negative_per_input"],
+                    "semantic_per_input": detailed_row["semantic_per_input"],
+                    "binary_f1": "" if avg_binary_f1 is None else f"{avg_binary_f1:.4f}",
+                    "multi_class_f1": "" if avg_multi_f1 is None else f"{avg_multi_f1:.4f}",
+                }
+                append_csv_row(EVAL_AVERAGE, avg_fields, avg_row)
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":
