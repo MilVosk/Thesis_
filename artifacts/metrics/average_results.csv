@@ -1,0 +1,11 @@
+positive_per_input,negative_per_input,semantic_per_input,prompt_style,binary_f1,binary_hamming_loss,multi_class_f1,multi_class_hamming_loss,runs
+0,0,0,code,0.48,0.55,0.46,0.54,3
+1,2,2,code,0.6,0.25,0.48,0.52,3
+2,4,3,code,0.65,0.23,0.44,0.56,3
+2,4,4,code,0.65,0.23,0.45,0.55,3
+4,8,8,code,0.63,0.25,0.42,0.58,3
+0,0,0,natural,0.34,0.35,0.2,0.8,3
+1,2,2,natural,0.66,0.22,0.56,0.44,3
+2,4,3,natural,0.62,0.25,0.54,0.46,3
+2,4,4,natural,0.66,0.22,0.58,0.42,3
+4,8,8,natural,0.61,0.25,0.55,0.45,3

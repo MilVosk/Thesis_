@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import re
 from collections.abc import Callable
+import json
 
 import pandas as pd
 from openai import OpenAI
@@ -19,6 +20,7 @@ def generate_gpt_response_with_relations(
     text_samples = text_df["text"].tolist()
     extracted_labels = []
     for text in text_samples:
+        escaped_text = json.dumps(text)
         prompt = prompt_source(text) if callable(prompt_source) else prompt_source
         messages = [
             {"role": "system", "content": "You are a helpful assistant for relation extraction."},
@@ -27,15 +29,28 @@ def generate_gpt_response_with_relations(
                 "content": (
                     f"{prompt}\n\n"
                     "Classify the following text and respond with the required format.\n"
-                    f"Text: \"{text}\""
+                    f"Text: {escaped_text}"
                 ),
             },
         ]
-        completion = client.chat.completions.create(model="gpt-4o-mini", messages=messages)
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0,
+            max_tokens=200,
+        )
         response = completion.choices[0].message.content.strip()
         extracted_labels.append(response)
-        print(extracted_labels)
     return extracted_labels
+
+VALID_LABELS = ["HAVE", "OCCUR_IN", "INFLUENCE", "NA"]
+LABEL_PATTERNS = {
+    "HAVE": re.compile(r"\bHAVE\b", re.IGNORECASE),
+    "OCCUR_IN": re.compile(r"\bOCCUR[_\s-]*IN\b", re.IGNORECASE),
+    "INFLUENCE": re.compile(r"\bINFLUENCE\b", re.IGNORECASE),
+    "NA": re.compile(r"\bNA\b|\bNO\s+RELATION\b", re.IGNORECASE),
+}
+
 
 def parse_multiple_responses(responses):
 
@@ -74,7 +89,13 @@ def parse_multiple_responses(responses):
             elif label:
                 label = label.upper()
             else:
-                label = "UNKNOWN"
+                upper_text = raw_response.upper()
+                fallback_label = None
+                for candidate, pattern in LABEL_PATTERNS.items():
+                    if pattern.search(upper_text):
+                        fallback_label = candidate
+                        break
+                label = fallback_label or "UNKNOWN"
         else:
             binary = -1
             label = "UNKNOWN"

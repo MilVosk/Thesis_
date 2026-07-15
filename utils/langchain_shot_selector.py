@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import random
 import re
 from pathlib import Path
-from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Set
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Set
 import math
 
 import pandas as pd
@@ -32,6 +32,30 @@ except ImportError:
             raise NotImplementedError
 
     CSVLoader = None  # type: ignore[misc,assignment]
+
+try:
+    # Pre-0.2 LangChain
+    from langchain.prompts.example_selector.semantic_similarity import (
+        SemanticSimilarityExampleSelector,
+    )
+except ImportError:  # pragma: no cover - optional dependency
+    try:
+        # LangChain 0.2+ split packages
+        from langchain_community.example_selectors.semantic_similarity import (  # type: ignore
+            SemanticSimilarityExampleSelector,
+        )
+    except ImportError:  # pragma: no cover - optional dependency
+        SemanticSimilarityExampleSelector = None  # type: ignore[misc]
+
+try:
+    from langchain_community.vectorstores import FAISS
+except ImportError:  # pragma: no cover - optional dependency
+    FAISS = None  # type: ignore[misc]
+
+try:
+    from langchain_openai import OpenAIEmbeddings
+except ImportError:  # pragma: no cover - optional dependency
+    OpenAIEmbeddings = None  # type: ignore[misc]
 
 
 ENTITY_TOKEN_PATTERN = re.compile(r"@([A-Z_]+)\$")
@@ -297,7 +321,7 @@ def build_entity_pair_selector(
     except ValueError as exc:
         print(
             "Warning: unable to build entity-pair selector (" + str(exc) + ")."
-            " Falling back to static few-shot examples."
+            " Continuing without entity-pair examples."
         )
         return None
 
@@ -363,6 +387,7 @@ class BalancedEntityPairSelector(BaseExampleSelector):
     random_seed: int | None = None
     max_pairs: int | None = 2
     max_total_examples: int | None = 12
+    allow_duplicates: bool = True
 
     def __post_init__(self) -> None:
         rng = random.Random(self.random_seed)
@@ -412,6 +437,20 @@ class BalancedEntityPairSelector(BaseExampleSelector):
         remaining: int | None,
     ) -> List[Dict[str, str]]:
         selection: List[Dict[str, str]] = []
+        if self.allow_duplicates:
+            # Cycle through available examples, reusing as needed to reach the target.
+            combined = pool if pool else fallback
+            if not combined:
+                return selection
+            idx = 0
+            while len(selection) < count:
+                candidate = combined[idx % len(combined)]
+                selection.append(candidate)
+                idx += 1
+                if remaining is not None and len(selection) >= remaining:
+                    break
+            return selection
+
         for candidate in pool:
             key = (candidate["gold"], candidate["text"])
             if key in selected_keys:
@@ -563,6 +602,7 @@ def build_balanced_entity_pair_selector(
     na_token: str = "NA",
     has_header: bool = False,
     random_seed: int | None = 13,
+    allow_duplicates: bool = True,
 ) -> Optional[BalancedEntityPairSelector]:
     df = _load_examples_with_langchain(
         source_csv,
@@ -639,4 +679,58 @@ def build_balanced_entity_pair_selector(
         pair_label_candidates=pair_label_candidates,
         unordered_label_candidates=unordered_label_candidates,
         random_seed=random_seed,
+        allow_duplicates=allow_duplicates,
     )
+
+
+def build_semantic_similarity_selector(
+    source_csv: str | Path,
+    *,
+    label_column: str = "gold",
+    text_column: str = "text",
+    has_header: bool = False,
+    top_k: int = 4,
+    embeddings: Any | None = None,
+    vectorstore_cls: Any | None = None,
+) -> Optional[BaseExampleSelector]:
+    """Construct a semantic-similarity selector backed by LangChain."""
+
+    if SemanticSimilarityExampleSelector is None:
+        raise ImportError(
+            "SemanticSimilarityExampleSelector requires langchain with "
+            "semantic similarity utilities installed."
+        )
+
+    if embeddings is None:
+        if OpenAIEmbeddings is None:
+            raise ImportError(
+                "OpenAIEmbeddings unavailable. Provide custom embeddings via "
+                "the 'embeddings' argument."
+            )
+        embeddings = OpenAIEmbeddings()
+
+    if vectorstore_cls is None:
+        if FAISS is None:
+            raise ImportError(
+                "FAISS vector store unavailable. Supply 'vectorstore_cls' with a "
+                "LangChain-compatible implementation."
+            )
+        vectorstore_cls = FAISS
+
+    df = _load_examples_with_langchain(
+        source_csv,
+        label_column=label_column,
+        text_column=text_column,
+        has_header=has_header,
+    )
+    if df.empty:
+        raise ValueError("No rows available to build semantic similarity selector.")
+
+    examples = df[[label_column, text_column]].to_dict("records")
+    selector = SemanticSimilarityExampleSelector.from_examples(
+        examples=examples,
+        embeddings=embeddings,
+        vectorstore_cls=vectorstore_cls,
+        k=top_k,
+    )
+    return selector
