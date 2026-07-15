@@ -56,11 +56,11 @@ The default few-shot configuration uses up to four positive entity-pair examples
 ## Project Structure
 
 - `main.py` - orchestrates the end-to-end inference workflow described above.
-- `evaluation.py` - computes binary/multi-class metrics, appends them to `artifacts/metrics/evaluation_log.csv`, and captures how many dynamic few-shot examples/inputs were used.
+- `evaluation.py` - computes binary and multi-class F1, appends results to `artifacts/metrics/evaluation_log.csv`, and captures how many dynamic few-shot examples/inputs were used.
 - `utils/` - helper modules (`data_loader`, prompt generation, LangChain selectors, GPT helpers, etc.).
 - `data/` - CSV inputs such as `german_train.csv`, `german_test.csv`, `train.csv`, and `test.csv`.
 - `prompts/` - houses the managed prompt assets (`natural_language_prompt.txt`, `natural_language_prompt_de.txt`, `code_prompts.txt`) plus the zero-shot `prompt_preview.txt`.
-- `artifacts/` - run outputs separated into `results/` (e.g., `results/results.csv`), `logs/` (`logs/few_shot_log.csv`), and `metrics/` (`metrics/evaluation_log.csv`, `metrics/evaluation_summary.csv`).
+- `artifacts/` - run outputs separated into `results/` (e.g., `results/results.csv`), `logs` (`logs/few_shot_log.csv`), and `metrics` (`metrics/evaluation_log.csv`, `metrics/evaluation_summary.csv`).
 - `requirements.txt` - dependency list for the default OpenAI, LangChain, and FAISS-based pipeline.
 
 ## Installation
@@ -71,7 +71,6 @@ cd Thesis_
 python -m venv .venv
 .\\.venv\\Scripts\\activate
 pip install -r requirements.txt
-```
 
 On macOS/Linux/WSL, activate the environment with:
 
@@ -135,7 +134,7 @@ To evaluate:
 python evaluation.py
 ```
 
-## Data
+## Dataa
 
 Expected files inside `data/`:
 
