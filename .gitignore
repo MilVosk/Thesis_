@@ -8,3 +8,5 @@ artifacts/
 prompts/prompt_preview.txt
 fp_fn_split.py
 analysis/
+evaluation_average.csv
+evaluation_log.csv
