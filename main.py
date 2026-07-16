@@ -9,6 +9,8 @@ import pandas as pd
 from paths import (
     CODE_PROMPTS_FILE,
     FEW_SHOT_LOG,
+    NATURAL_PROMPT_DE_FILE,
+    NATURAL_PROMPT_FILE,
     PROMPT_PREVIEW_FILE,
     RESULTS_CSV,
     ensure_directories,
@@ -259,9 +261,9 @@ def main() -> None:
 
     ensure_directories()
     natural_prompt_path = (
-        Path("prompts/natural_language_prompt_de.txt")
+        NATURAL_PROMPT_DE_FILE
         if args.natural_prompt_lang == "de"
-        else Path("prompts/natural_language_prompt.txt")
+        else NATURAL_PROMPT_FILE
     )
     code_prompt_template = load_code_prompt() if USE_CODE_PROMPT else None
     few_shot_logs: list[pd.DataFrame] = []

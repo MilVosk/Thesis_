@@ -4,8 +4,9 @@ from typing import Callable, Optional
 
 import pandas as pd
 
-NATURAL_PROMPT_FILE = Path("prompts/natural_language_prompt.txt")
-CODE_PROMPT_PATHS = (Path("prompts/code_prompts.txt"),)
+from paths import CODE_PROMPTS_FILE, NATURAL_PROMPT_FILE
+
+CODE_PROMPT_PATHS = (CODE_PROMPTS_FILE,)
 
 RELATION_CLASS_MAP = {
     "HAVE": "Have",
