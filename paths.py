@@ -1,18 +1,17 @@
-"""Central definition of repository paths to keep layout consistent."""
 from __future__ import annotations
 
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# High-level folders
+                    
 ARTIFACTS_DIR = BASE_DIR / "artifacts"
 LOGS_DIR = ARTIFACTS_DIR / "logs"
 RESULTS_DIR = ARTIFACTS_DIR / "results"
 METRICS_DIR = ARTIFACTS_DIR / "metrics"
 PROMPTS_DIR = BASE_DIR / "prompts"
 
-# Frequently referenced files
+                             
 RESULTS_CSV = RESULTS_DIR / "results.csv"
 CODE_PROMPTS_FILE = PROMPTS_DIR / "code_prompts.txt"
 NATURAL_PROMPT_FILE = PROMPTS_DIR / "natural_language_prompt.txt"

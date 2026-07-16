@@ -1,5 +1,3 @@
-"""LangChain-powered utilities for selecting balanced few-shot examples."""
-
 from __future__ import annotations
 
 from collections import defaultdict
@@ -20,7 +18,7 @@ try:
 except ImportError:
     LANGCHAIN_AVAILABLE = False
 
-    class BaseExampleSelector:  # type: ignore
+    class BaseExampleSelector:                
         """Fallback base selector when LangChain is unavailable."""
 
         def add_example(self, example: Dict[str, str]) -> None:
@@ -31,31 +29,31 @@ except ImportError:
         ) -> List[Dict[str, str]]:
             raise NotImplementedError
 
-    CSVLoader = None  # type: ignore[misc,assignment]
+    CSVLoader = None                                 
 
 try:
-    # Pre-0.2 LangChain
+                       
     from langchain.prompts.example_selector.semantic_similarity import (
         SemanticSimilarityExampleSelector,
     )
-except ImportError:  # pragma: no cover - optional dependency
+except ImportError:                                          
     try:
-        # LangChain 0.2+ split packages
-        from langchain_community.example_selectors.semantic_similarity import (  # type: ignore
+                                       
+        from langchain_community.example_selectors.semantic_similarity import (                
             SemanticSimilarityExampleSelector,
         )
-    except ImportError:  # pragma: no cover - optional dependency
-        SemanticSimilarityExampleSelector = None  # type: ignore[misc]
+    except ImportError:                                          
+        SemanticSimilarityExampleSelector = None                      
 
 try:
     from langchain_community.vectorstores import FAISS
-except ImportError:  # pragma: no cover - optional dependency
-    FAISS = None  # type: ignore[misc]
+except ImportError:                                          
+    FAISS = None                      
 
 try:
     from langchain_openai import OpenAIEmbeddings
-except ImportError:  # pragma: no cover - optional dependency
-    OpenAIEmbeddings = None  # type: ignore[misc]
+except ImportError:                                          
+    OpenAIEmbeddings = None                      
 
 
 ENTITY_TOKEN_PATTERN = re.compile(r"@([A-Z_]+)\$")
@@ -438,7 +436,7 @@ class BalancedEntityPairSelector(BaseExampleSelector):
     ) -> List[Dict[str, str]]:
         selection: List[Dict[str, str]] = []
         if self.allow_duplicates:
-            # Cycle through available examples, reusing as needed to reach the target.
+                                                                                      
             combined = pool if pool else fallback
             if not combined:
                 return selection

@@ -29,27 +29,22 @@ from utils.prompt_generator import (
 )
 
 
-EVAL_CSV_PATH_DEFAULT = "data/german_test.csv"
+EVAL_CSV_PATH_DEFAULT = "data/test.csv"
 EVAL_HAS_HEADER_DEFAULT = True
-# Training data (few-shot pool) defaults
-TRAIN_CSV_PATH_DEFAULT = "data/german_train.csv"
+TRAIN_CSV_PATH_DEFAULT = "data/train.csv"
 TRAIN_HAS_HEADER_DEFAULT = False
-# Set to None to evaluate on the full test set.
 EVAL_ROW_LIMIT_DEFAULT = None
 CODE_PROMPT_PATHS = (CODE_PROMPTS_FILE,)
 
-# Prompt / evaluation configuration
-# Set USE_ZERO_SHOT = True to run pure zero-shot classification (no few-shot examples).
+
 USE_ZERO_SHOT = True
-# Toggle to enable the structured code prompt template instead of the natural-language prompt.
 USE_CODE_PROMPT = False
 
-# Controls how many dynamic examples are selected around the current sentence
-# when using the balanced entity-pair selector (few-shot mode only).
+
 DYNAMIC_POSITIVE_SAMPLES = 1
 DYNAMIC_NA_SAMPLES = 2
 
-# Controls semantic-similarity retrieval for dynamic few-shot prompts.
+
 USE_SEMANTIC_SELECTOR = True
 SEMANTIC_SIMILARITY_SAMPLES = 2
 
@@ -273,13 +268,10 @@ def main() -> None:
         log_df["input_text"] = input_text
         few_shot_logs.append(log_df)
 
-    # Prepare examples and prompt builder depending on zero-shot vs few-shot mode.
     if USE_ZERO_SHOT:
-        # Pure zero-shot: no labeled examples are used.
         shot_df = pd.DataFrame(columns=["gold", "text"])
         entity_pair_selector = None
 
-        # Still write a prompt preview (instructions only) for inspection.
         prompt_preview = prompt_generator(
             shot_df, base_prompt_path=natural_prompt_path
         )
@@ -288,7 +280,6 @@ def main() -> None:
         if code_prompt_template:
             prompt_builder = build_zero_shot_code_prompt_builder(code_prompt_template)
         else:
-            # Simple zero-shot builder: always use an empty examples DataFrame.
             def prompt_builder(text: str) -> str:  # type: ignore[assignment]
                 _ = text
                 empty_df = pd.DataFrame(columns=["gold", "text"])
@@ -296,7 +287,6 @@ def main() -> None:
                     empty_df, base_prompt_path=natural_prompt_path
                 )
     else:
-        # Few-shot mode: rely exclusively on dynamic selectors (no static base pool).
         semantic_selector = None
         try:
             entity_pair_selector = build_balanced_entity_pair_selector(

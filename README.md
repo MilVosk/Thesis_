@@ -102,6 +102,13 @@ python main.py --natural-prompt-lang de
 python main.py --eval-csv data/german_test.csv --train-csv data/german_train.csv --natural-prompt-lang de
 ```
 
+If you want German data to be the default every time, update the defaults near the top of `main.py`:
+
+```python
+EVAL_CSV_PATH_DEFAULT = "data/german_test.csv"
+TRAIN_CSV_PATH_DEFAULT = "data/german_train.csv"
+```
+
 Natural-language prompting is used when `USE_CODE_PROMPT = False` in `main.py`. If `USE_CODE_PROMPT = True`, the pipeline uses `prompts/code_prompts.txt` instead of the natural-language prompt files.
 
 Key artifacts:

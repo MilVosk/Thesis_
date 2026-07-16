@@ -1,18 +1,4 @@
-#!/usr/bin/env python3
-"""
-Translate data/train.csv to data/german_train.csv using OpenAI's Chat Completions API.
-- Keeps the first column (label) unchanged.
-- Translates the text column to German.
-- Batches requests to keep token usage reasonable.
-
-Usage (requires env OPENAI_API_KEY):
-    python3 translator.py --input data/train.csv --output data/german_train.csv \
-        --model gpt-4o-mini --batch-size 8
-
-This script uses only the standard library plus `requests`. Install requests if missing:
-    python3 -m pip install --user requests
-"""
-from __future__ import annotations
+                      from __future__ import annotations
 import argparse
 import csv
 import json
@@ -35,10 +21,6 @@ SYSTEM_PROMPT = (
 
 
 def _extract_json_array(text: str) -> List[str]:
-    """
-    Parse a JSON array from a model response, tolerating stray text/code fences.
-    Raises ValueError if parsing fails.
-    """
     text = text.strip()
     try:
         parsed = json.loads(text)
@@ -51,7 +33,7 @@ def _extract_json_array(text: str) -> List[str]:
     except Exception:
         pass
 
-    # Fallback: grab the first [...] segment.
+                                             
     start = text.find("[")
     end = text.rfind("]")
     if start != -1 and end != -1 and end > start:
@@ -64,7 +46,6 @@ def _extract_json_array(text: str) -> List[str]:
 
 
 def _translate_batch_once(texts: List[str], model: str, api_key: str, timeout: int = 60) -> List[str]:
-    """Single attempt to translate a list of sentences; raises on any issue."""
     user_prompt = {
         "role": "user",
         "content": (
@@ -96,8 +77,8 @@ def _translate_batch_once(texts: List[str], model: str, api_key: str, timeout: i
     if not isinstance(translations, list):
         raise ValueError("Unexpected translation payload (not a list)")
 
-    # Be lenient: some models may return extra items; truncate if too long, but
-    # still fail if too short to avoid silent data loss.
+                                                                               
+                                                        
     if len(translations) < len(texts):
         raise ValueError(f"Unexpected translation length (got {len(translations)} for {len(texts)})")
     if len(translations) > len(texts):
@@ -107,11 +88,10 @@ def _translate_batch_once(texts: List[str], model: str, api_key: str, timeout: i
 
 
 def translate_batch(texts: List[str], model: str, api_key: str, timeout: int = 60) -> List[str]:
-    """Translate with up to 6 retries for transient errors."""
     for attempt in range(6):
         try:
             return _translate_batch_once(texts, model, api_key, timeout)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:                
             wait = 2 ** attempt * 0.5
             sys.stderr.write(f"Batch failed (attempt {attempt+1}/6): {exc}. Retrying in {wait:.1f}s...\n")
             sys.stderr.flush()
@@ -120,11 +100,8 @@ def translate_batch(texts: List[str], model: str, api_key: str, timeout: int = 6
 
 
 def translate_batch_with_fallback(texts: List[str], model: str, api_key: str, timeout: int = 60) -> List[str]:
-    """
-    Translate a list, falling back to per-sentence calls if the batch reply is malformed.
-    """
     try:
-        # Try once without consuming retries to avoid repeated length-mismatch noise.
+                                                                                     
         return _translate_batch_once(texts, model, api_key, timeout)
     except Exception as exc:
         sys.stderr.write(f"Batch parsing failed, falling back to per-sentence translation: {exc}\n")
@@ -156,13 +133,13 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=None, help="Optional max rows to process")
     args = parser.parse_args()
 
-    # Load API key from .env if present.
+                                        
     load_dotenv()
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         sys.exit("Please set OPENAI_API_KEY in the environment.")
 
-    # Determine starting index
+                              
     start_index = 0 if args.start is None else args.start
     if args.start is None and args.resume and os.path.exists(args.output):
         with open(args.output, newline="", encoding="utf-8") as f:
