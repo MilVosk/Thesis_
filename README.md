@@ -29,7 +29,7 @@ High-level flow:
 
 Dynamic few-shot selection lives in `utils/langchain_shot_selector.py`:
 
-- **CSV ingestion**: `CSVLoader` (when available) or a pandas fallback loads `gold`/`text` pairs from the configured training CSV. The current default is `data/german_train.csv`.
+- **CSV ingestion**: Few-shot training examples are loaded from the configured training CSV. Each training row should provide a `gold` relation label (`HAVE`, `OCCUR_IN`, `INFLUENCE`, or `NA`) and a `text` sentence. The loader uses LangChain's `CSVLoader` when available and falls back to `pandas.read_csv()` otherwise. The current default training file is `data/train.csv`; use `--train-csv data/german_train.csv` for the German training set.
 - **BalancedEntityPairSelector**: Extends LangChain's `BaseExampleSelector` to return entity-pair specific samples. It groups examples by the first two entity tags found in the text, then draws a balanced set of positive vs. `NA` samples while respecting a global budget.
 - **SemanticSimilarityExampleSelector (optional)**: When enabled it embeds every training sentence (OpenAI embeddings by default) and uses FAISS to retrieve the `k` closest examples per query, complementing the entity-pair signal.
 - **LabelBalancedExampleSelector / EntityPairExampleSelector**: Lightweight helper selectors available for non-default selection flows.
@@ -42,16 +42,16 @@ Dynamic few-shot selection lives in `utils/langchain_shot_selector.py`:
 All prompt construction logic lives in `utils/prompt_generator.py` and `main.py`:
 
  - **Instruction block**: A concise task description reminding the model about entity annotations, reasoning steps, and the exact output format (`"1, RELATION"` or `"0, NA"`). It stresses that co-occurrence alone is insufficient.
- - **Few-shot assembly**: In few-shot mode, `build_prompt_builder` merges examples selected for the current sentence:
+ - **Few-shot assembly**: When `USE_ZERO_SHOT = False`, `build_prompt_builder` merges examples selected for the current sentence:
    - The balanced entity-pair selector draws positive and `NA` examples around matching entity pairs.
    - The semantic-similarity selector, when enabled, adds nearest training examples from a FAISS-backed vector store.
    - Optional positive-only and `NA`-only selector hooks exist in the code but are not used by the default pipeline.
  - **Output constraints**: The natural-language prompt spells out the only valid responses (`1, HAVE|OCCUR_IN|INFLUENCE` or `0, NA`) so the LLM cannot drift into prose answers.
  - **Deterministic calls**: `utils/gpt_utils.py` escapes each input sentence and calls `gpt-4o-mini` with `temperature=0`/bounded `max_tokens` for reproducible classifications.
- - **Code-style prompting**: When `USE_CODE_PROMPT = True` in `main.py`, `build_code_prompt_builder` uses `prompts/code_prompts.txt`, injects the current sentence into the template, and appends few-shot snippets formatted as pseudo-code assignments (with `results = [1, Have]` etc.). This style is tracked as `prompt_style="code"` in the evaluation log.
- - **Logging**: Every assembled few-shot frame can be recorded through `record_few_shot_examples`, producing `artifacts/logs/few_shot_log.csv` for later auditing.
+ - **Code-style prompting**: When `USE_CODE_PROMPT = True` in `main.py`, the pipeline uses `prompts/code_prompts.txt` instead of the natural-language prompt. In few-shot mode, `build_code_prompt_builder` appends selected examples as pseudo-code assignments (with `results = [1, Have]` etc.). This style is tracked as `prompt_style="code"` in the evaluation log.
+ - **Logging**: In few-shot mode, every assembled few-shot frame can be recorded through `record_few_shot_examples`, producing `artifacts/logs/few_shot_log.csv` for later auditing.
 
-The default few-shot configuration uses up to four positive entity-pair examples, eight `NA` entity-pair examples, and eight semantic-similarity examples per input, subject to the selector limits in `main.py` and `utils/langchain_shot_selector.py`.
+The pipeline currently defaults to zero-shot mode (`USE_ZERO_SHOT = True`). If few-shot mode is enabled, the current configuration uses up to one positive entity-pair example, two `NA` entity-pair examples, and two semantic-similarity examples per input, subject to the selector limits in `main.py` and `utils/langchain_shot_selector.py`.
 
 ## Project Structure
 
@@ -71,6 +71,7 @@ cd Thesis_
 python -m venv .venv
 .\\.venv\\Scripts\\activate
 pip install -r requirements.txt
+```
 
 On macOS/Linux/WSL, activate the environment with:
 
@@ -83,7 +84,7 @@ LangChain, FAISS, and `langchain-openai` are needed for the default semantic few
 ## Running the Pipeline
 
 1. Set `OPENAI_API_KEY` in your environment or in a local `.env` file.
-2. Place the evaluation sentences in the configured evaluation CSV. The current default is `data/german_test.csv`; the file must include at least a `text` column, and `gold` is optional but needed for metrics.
+2. Place the evaluation sentences in the configured evaluation CSV. The current default is `data/test.csv`; the file must include at least a `text` column, and `gold` is optional but needed for metrics.
 3. Run with the default English natural-language prompt:
 
 ```bash
@@ -141,13 +142,12 @@ To evaluate:
 python evaluation.py
 ```
 
-## Dataa
+## Data
 
 Expected files inside `data/`:
 
-- `german_train.csv` - default few-shot training pool, read as no-header CSV with `gold,text` columns.
-- `german_test.csv` - default evaluation/inference file, read with a header row and at least a `text` column.
-- `train.csv` / `test.csv` - alternate English/default datasets that can be selected with `--train-csv` and `--eval-csv`.
-- `shot.csv` - legacy/static shot file kept in the repository but not used by the current default `main.py` pipeline.
+- `train.csv` - default few-shot training pool, read as no-header CSV with `gold,text` columns.
+- `test.csv` - default evaluation/inference file, read with a header row and at least a `text` column.
+- `german_train.csv` / `german_test.csv` - German datasets that can be selected with `--train-csv`, `--eval-csv`, and `--natural-prompt-lang de`.
 
 Entity mentions inside each sentence must already be tagged with `@ENTITY_TYPE$` tokens so the model can reason about relationships without additional NER steps.

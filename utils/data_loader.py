@@ -11,7 +11,7 @@ def get_dataframe(
     keep_default_na: bool = False,
 ) -> pd.DataFrame:
     header = 0 if has_header else None
-                                                                             
+
     df = pd.read_csv(file_path, header=header, keep_default_na=keep_default_na)
 
     if columns is not None:

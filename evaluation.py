@@ -120,7 +120,7 @@ def main() -> None:
         german_score = 0
         english_score = 0
 
-                                               
+
         german_score += len(re.findall(r"[äöüß]", sample))
 
         german_markers = [
@@ -154,7 +154,7 @@ def main() -> None:
     zero_shot_mode = bool(USE_ZERO_SHOT)
     few_shot_examples = "0"
     few_shot_inputs = "0"
-                                                                                      
+
     examples_per_input = "0"
     avg_positive_per_input = "0"
     avg_negative_per_input = "0"
@@ -171,7 +171,7 @@ def main() -> None:
                 few_shot_examples = str(len(dynamic_df))
                 if "input_text" in dynamic_df.columns:
                     few_shot_inputs = str(dynamic_df["input_text"].nunique())
-                                                                    
+
                 if "input_text" in fs_df.columns:
                     per_input_counts = fs_df.groupby("input_text").size()
                     if not per_input_counts.empty:
@@ -269,7 +269,7 @@ def main() -> None:
     }
     append_csv_row(detailed_log_path, detailed_fields, detailed_row)
 
-                                                                             
+
     try:
         if EVAL_SUMMARY.exists():
             summary_df = pd.read_csv(EVAL_SUMMARY, keep_default_na=False)

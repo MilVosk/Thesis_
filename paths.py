@@ -4,14 +4,14 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-                    
+
 ARTIFACTS_DIR = BASE_DIR / "artifacts"
 LOGS_DIR = ARTIFACTS_DIR / "logs"
 RESULTS_DIR = ARTIFACTS_DIR / "results"
 METRICS_DIR = ARTIFACTS_DIR / "metrics"
 PROMPTS_DIR = BASE_DIR / "prompts"
 
-                             
+
 RESULTS_CSV = RESULTS_DIR / "results.csv"
 CODE_PROMPTS_FILE = PROMPTS_DIR / "code_prompts.txt"
 NATURAL_PROMPT_FILE = PROMPTS_DIR / "natural_language_prompt.txt"

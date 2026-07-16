@@ -1,4 +1,4 @@
-                      from __future__ import annotations
+from __future__ import annotations
 import argparse
 import csv
 import json
@@ -33,7 +33,7 @@ def _extract_json_array(text: str) -> List[str]:
     except Exception:
         pass
 
-                                             
+
     start = text.find("[")
     end = text.rfind("]")
     if start != -1 and end != -1 and end > start:
@@ -77,8 +77,8 @@ def _translate_batch_once(texts: List[str], model: str, api_key: str, timeout: i
     if not isinstance(translations, list):
         raise ValueError("Unexpected translation payload (not a list)")
 
-                                                                               
-                                                        
+
+
     if len(translations) < len(texts):
         raise ValueError(f"Unexpected translation length (got {len(translations)} for {len(texts)})")
     if len(translations) > len(texts):
@@ -101,7 +101,7 @@ def translate_batch(texts: List[str], model: str, api_key: str, timeout: int = 6
 
 def translate_batch_with_fallback(texts: List[str], model: str, api_key: str, timeout: int = 60) -> List[str]:
     try:
-                                                                                     
+
         return _translate_batch_once(texts, model, api_key, timeout)
     except Exception as exc:
         sys.stderr.write(f"Batch parsing failed, falling back to per-sentence translation: {exc}\n")
@@ -133,13 +133,13 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=None, help="Optional max rows to process")
     args = parser.parse_args()
 
-                                        
+
     load_dotenv()
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         sys.exit("Please set OPENAI_API_KEY in the environment.")
 
-                              
+
     start_index = 0 if args.start is None else args.start
     if args.start is None and args.resume and os.path.exists(args.output):
         with open(args.output, newline="", encoding="utf-8") as f:

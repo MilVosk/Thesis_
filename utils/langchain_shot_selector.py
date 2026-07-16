@@ -32,13 +32,13 @@ except ImportError:
     CSVLoader = None                                 
 
 try:
-                       
+
     from langchain.prompts.example_selector.semantic_similarity import (
         SemanticSimilarityExampleSelector,
     )
 except ImportError:                                          
     try:
-                                       
+
         from langchain_community.example_selectors.semantic_similarity import (                
             SemanticSimilarityExampleSelector,
         )
@@ -436,7 +436,7 @@ class BalancedEntityPairSelector(BaseExampleSelector):
     ) -> List[Dict[str, str]]:
         selection: List[Dict[str, str]] = []
         if self.allow_duplicates:
-                                                                                      
+
             combined = pool if pool else fallback
             if not combined:
                 return selection
