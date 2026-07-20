@@ -24,7 +24,7 @@ The supported labels are:
 
 ## Dataset
 
-The experiments are based on the BiodivRE relation extraction dataset. The original dataset is in English, and a German version was created through machine translation for the cross-lingual experiments.
+The experiments are based on the BiodivRE [Link text](https://github.com/fusion-jena/BiodivNERE) relation extraction dataset. The original dataset is in English, and a German version was created through machine translation for the cross-lingual experiments.
 
 The original train/test split is kept:
 
