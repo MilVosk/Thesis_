@@ -1,10 +1,10 @@
-# Biodiversity Relation Extraction with Few-Shot Prompting
+# Leveraging Large Language Models for Biodiversity Relation Extraction: A Code vs. Natural Prompting Study in English and German
 
-This project investigates instruction-based prompting for biodiversity relation extraction in English and German. It compares zero-shot and few-shot settings for classifying semantic relations between already annotated entity mentions in biodiversity texts. The experiments evaluate natural-language and code-style prompts, with dynamically selected few-shot examples drawn from the training split.
+This project investigates instruction-based prompting for biodiversity relation extraction in English and German. It compares zero-shot and few-shot settings for classifying semantic relations between already annotated entity mentions in biodiversity texts. The experiments test two prompting styles, code-style prompting and natural-language (NL-style) prompting, on both English and German language data.
 
 ## Overview
 
-The task is sentence-level relation extraction. Each input sentence already contains marked entity mentions, such as `@ORGANISM$`, `@ENVIRONMENT$`, or `@PROCESS$`, so the model does not perform named entity recognition. Given a sentence with two marked entities, the model predicts whether an explicit relation exists and which relation type applies.
+The task is sentence-level relation extraction. Each input sentence already contains marked entity mentions, such as `@ORGANISM$`, `@ENVIRONMENT$`, etc. Given a sentence with two marked entities, the model predicts whether an explicit relation exists and which relation type applies.
 
 The supported labels are:
 
@@ -13,7 +13,7 @@ The supported labels are:
 - `INFLUENCE`
 - `NA`
 
-`NA` is used when no explicit relation is expressed between the entity pair. Co-occurrence alone is not treated as evidence for a relation.
+`NA` is used when no explicit relation is expressed between the entity pair. 
 
 ## Research Questions
 
@@ -39,13 +39,12 @@ Expected files inside `data/`:
 - `german_test.csv` - German test examples for evaluation.
 - `dev.csv` - development data, if needed for analysis.
 
-If the dataset cannot be redistributed because of licensing restrictions, keep the code and prompts in the repository and document where the dataset should be placed locally.
 
 ## Prompting Setup
 
-The repository supports two prompt styles:
+The repository supports two prompt styles, and both are tested on English and German data:
 
-- Natural-language prompts, stored in `prompts/natural_language_prompt.txt` and `prompts/natural_language_prompt_de.txt`.
+- Natural-language (NL-style) prompts, stored in `prompts/natural_language_prompt.txt` and `prompts/natural_language_prompt_de.txt`.
 - Code-style prompts, stored in `prompts/code_prompts.txt`.
 
 Both prompt styles can be used in zero-shot and few-shot settings. In zero-shot mode, the model receives only the task instructions and the input sentence. In few-shot mode, the prompt is extended with dynamically selected examples from the training set.
@@ -71,7 +70,6 @@ Few-shot retrieval is implemented in `utils/langchain_shot_selector.py`. The def
 │   ├── results/           # Prediction CSV files
 │   ├── metrics/           # Evaluation logs and metric summaries
 │   ├── logs/              # Few-shot example logs
-│   └── plots/             # Generated analysis and plotting support files
 ├── main.py                # Runs relation extraction inference
 ├── evaluation.py          # Computes binary and multi-class evaluation metrics
 ├── paths.py               # Shared paths for generated outputs
@@ -178,21 +176,5 @@ artifacts/logs/few_shot_log.csv
 
 ## Results and Artifacts
 
-The `artifacts/` directory contains generated outputs such as model predictions, metric summaries, few-shot logs, plotting support files, and LaTeX tables. These files are intentionally ignored by Git because they are run outputs and can become large or change frequently.
+The `artifacts/` directory contains generated outputs such as model predictions, metric summaries, few-shot logs. These files are intentionally ignored by Git because they are run outputs and can become large or change frequently.
 
-For a thesis submission or reproducibility package, include only the final selected outputs that are needed to support the reported results. Raw logs, temporary previews, virtual environments, cache files, and local `.env` files should not be committed.
-
-## Notes on Generated Files
-
-The following files and directories are generated locally and are excluded from version control:
-
-- `artifacts/`
-- `prompts/prompt_preview.txt`
-- `evaluation_log.csv`
-- `evaluation_average.csv`
-- `.env`
-- `.venv/`
-- `venv/`
-- `__pycache__/`
-
-This keeps the GitHub repository focused on source code, prompts, configuration, and the data files required to reproduce the experiments.
