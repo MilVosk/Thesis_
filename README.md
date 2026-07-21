@@ -1,6 +1,6 @@
 # Leveraging Large Language Models for Biodiversity Relation Extraction: A Code vs. Natural Prompting Study in English and German
 
-This project investigates instruction-based prompting for biodiversity relation extraction in English and German. It compares zero-shot and few-shot settings for classifying semantic relations between already annotated entity mentions in biodiversity texts. The experiments test two prompting styles, code-style prompting and natural-language (NL-style) prompting, on both English and German language data.
+This project explores instruction-based prompting for biodiversity relation extraction in English and German. It compares zero-shot and few-shot settings for classifying relations between already annotated entity mentions in biodiversity texts. The experiments test two prompting styles, code-style prompting and natural-language prompting, on both English and German language data.
 
 ## Overview
 
@@ -14,13 +14,6 @@ The supported labels are:
 - `NA`
 
 `NA` is used when no explicit relation is expressed between the entity pair. 
-
-## Research Questions
-
-1. To what extent can large language models perform relation extraction on German biodiversity texts?
-2. How does relation extraction performance differ between German and English biodiversity datasets?
-3. How do natural-language and code-style prompting strategies compare?
-4. How does the number of few-shot examples influence performance?
 
 ## Dataset
 
@@ -110,6 +103,31 @@ Set your OpenAI API key in the environment or in a local `.env` file:
 OPENAI_API_KEY=your_api_key_here
 ```
 
+## Model Configuration
+
+The default OpenAI model is `gpt-4o-mini`.
+
+For relation extraction experiments, change the `model` value in `utils/gpt_utils.py` inside the `client.chat.completions.create(...)` call:
+
+```python
+completion = client.chat.completions.create(
+    model="gpt-4o-mini",
+    ...
+)
+```
+
+For translation, the default model is set in `translator.py`:
+
+```python
+DEFAULT_MODEL = "gpt-4o-mini"
+```
+
+You can also override the translation model from the command line:
+
+```bash
+python translator.py --model your-model-name
+```
+
 ## Running the Experiments
 
 Run the default English setup:
@@ -177,4 +195,3 @@ artifacts/logs/few_shot_log.csv
 ## Results and Artifacts
 
 The `artifacts/` directory contains generated outputs such as model predictions, metric summaries, few-shot logs. These files are intentionally ignored by Git because they are run outputs and can become large or change frequently.
-
