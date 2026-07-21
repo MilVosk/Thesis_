@@ -42,7 +42,7 @@ Expected files inside `data/`:
 
 The repository supports two prompt styles, and both are tested on English and German data:
 
-- Natural-language (NL-style) prompts, stored in `prompts/natural_language_prompt.txt` and `prompts/natural_language_prompt_de.txt`.
+- Natural-language prompts, stored in `prompts/natural_language_prompt.txt` and `prompts/natural_language_prompt_de.txt`.
 - Code-style prompts, stored in `prompts/code_prompts.txt`.
 
 Both prompt styles can be used in zero-shot and few-shot settings. In zero-shot mode, the model receives only the task instructions and the input sentence. In few-shot mode, the prompt is extended with dynamically selected examples from the training set.
