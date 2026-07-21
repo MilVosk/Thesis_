@@ -17,9 +17,9 @@ The supported labels are:
 
 ## Dataset
 
-This project uses the BiodivRE corpus from the BiodivNERE dataset by [Abdelmageed et al., 2022](https://bdj.pensoft.net/article/89481/instance/7788834/).The original dataset is available on Zenodo: https://doi.org/10.5281/zenodo.6575865
+This project uses the BiodivRE corpus from the BiodivNERE dataset by [Abdelmageed et al., 2022](https://bdj.pensoft.net/article/89481/instance/7788834/). The original dataset is available on Zenodo: https://doi.org/10.5281/zenodo.6575865
 
-The BiodivNERE/BiodivRE dataset is released under the Creative Commons CC0 1.0 Universal license.
+The BiodivNERE/BiodivRE dataset is released under the Creative Commons CC0 1.0 Universal license (see https://github.com/fusion-jena/BiodivNERE?tab=CC0-1.0-1-ov-file).
 
 The German version included in this repository was created by machine translation for the experiments in this project.
 
