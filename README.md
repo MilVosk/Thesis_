@@ -17,12 +17,17 @@ The supported labels are:
 
 ## Dataset
 
-The experiments are based on the BiodivRE [Link text](https://github.com/fusion-jena/BiodivNERE) relation extraction dataset. The original dataset is in English, and a German version was created through machine translation for the cross-lingual experiments.
+This project uses the BiodivRE corpus from the BiodivNERE dataset by [Abdelmageed et al., 2022](https://bdj.pensoft.net/article/89481/instance/7788834/).The original dataset is available on Zenodo: https://doi.org/10.5281/zenodo.6575865
+
+The BiodivNERE/BiodivRE dataset is released under the Creative Commons CC0 1.0 Universal license.
+
+The German version included in this repository was created by machine translation for the experiments in this project.
 
 The original train/test split is kept:
 
 - The training set is used only for few-shot example retrieval.
 - The test set is used for final inference and evaluation.
+
 
 Expected files inside `data/`:
 
@@ -50,7 +55,7 @@ Prompt components include:
 - Checklist-style instructions.
 - Strict output format: `1, RELATION` or `0, NA`.
 
-Few-shot retrieval is implemented in `utils/langchain_shot_selector.py`. The default setup uses entity-pair balanced selection and can optionally add semantic-similarity examples through LangChain, OpenAI embeddings, and FAISS.
+Few-shot retrieval is implemented in `utils/langchain_shot_selector.py`. The default setup uses entity-pair balanced selection and can optionally add semantic similarity examples through LangChain, OpenAI embeddings, and FAISS.
 
 ## Repository Structure
 
@@ -74,8 +79,8 @@ Few-shot retrieval is implemented in `utils/langchain_shot_selector.py`. The def
 ## Installation
 
 ```bash
-git clone https://github.com/MilVosk/Thesis_.git
-cd Thesis_
+git clone https://github.com/MilVosk/Biodiversity_Relation_Extraction.git
+cd Biodiversity_Relation_Extraction
 python -m venv .venv
 ```
 
@@ -180,11 +185,11 @@ python evaluation.py
 - Binary F1, where all non-`NA` labels are treated as positive relations.
 - Multi-class micro F1 over the relation labels.
 
-Evaluation outputs are written to:
+Evaluation output is written to:
 
-- `artifacts/metrics/evaluation_log.csv`
-- `artifacts/metrics/evaluation_summary.csv`
-- `artifacts/metrics/evaluation_average.csv`
+```text
+artifacts/metrics/evaluation_log.csv
+```
 
 When few-shot logging is enabled, selected examples are written to:
 
